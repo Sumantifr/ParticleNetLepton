@@ -4,7 +4,6 @@ config=PNet_MC_MINIAOD_cfg.py
 publish=True
 site=T2_AT_Vienna
 DBS=global
-username=name
 
 sample_names=(
 TT_Dilep TT_Had TT_Semilep

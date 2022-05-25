@@ -71,7 +71,7 @@ inFiles = cms.untracked.vstring(
 'root://xrootd-cms.infn.it//store/mc/RunIISummer20UL18MiniAODv2/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/MINIAODSIM/106X_upgrade2018_realistic_v16_L1v1-v1/00000/04A0B676-D63A-6D41-B47F-F4CF8CBE7DB8.root'
    )
 
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(300))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(3000))
 
 #process.firstEvent = cms.untracked.PSet(input = cms.untracked.int32(5000))
 process.source = cms.Source("PoolSource", fileNames = inFiles )
@@ -221,7 +221,7 @@ process.deepntuplizer =  cms.EDAnalyzer('PNLepton',
 	 QCDtagger_PNet = cms.untracked.string("pfMassDecorrelatedParticleNetDiscriminatorsJetTags:QCD"),
 
 	 PFJetsAK4 = cms.InputTag("slimmedJets"), 
-	 minjPt = cms.untracked.double(25.),
+	 minjPt = cms.untracked.double(30.),
 	 maxEta = cms.untracked.double(3.),
 
 	 GENJetAK8 = cms.InputTag("slimmedGenJetsAK8"),
@@ -230,11 +230,11 @@ process.deepntuplizer =  cms.EDAnalyzer('PNLepton',
 	 maxGenEta = cms.untracked.double(5.),         
          
 	 Muons = cms.InputTag("slimmedMuons"),
-	 minmuPt  = cms.untracked.double(10.),
+	 minmuPt  = cms.untracked.double(20.),
 	 EAFile_MuonMiniIso = cms.FileInPath("PhysicsTools/NanoAOD/data/effAreaMuons_cone03_pfNeuHadronsAndPhotons_94X.txt"),
 
 	 Electrons = cms.InputTag("slimmedElectrons"),
-	 minePt   = cms.untracked.double(10.),
+	 minePt   = cms.untracked.double(20.),
 	 electronID_isowp90        = cms.string('mvaEleID-Fall17-iso-V2-wp90'),
          electronID_noisowp90      = cms.string('mvaEleID-Fall17-noIso-V2-wp90'),
          electronID_isowp80        = cms.string('mvaEleID-Fall17-iso-V2-wp80'),

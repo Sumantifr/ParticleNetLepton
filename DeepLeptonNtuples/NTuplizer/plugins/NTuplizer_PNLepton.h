@@ -243,23 +243,26 @@ double delta2R(double eta1, double phi1, double eta2, double phi2) {
 }
 
 int getGenPartonFlavor(float lep_eta, float lep_phi, vector<GenParton>GenParts, int lep_pdgId, float dRcut=0.4)
-{
+{	
 	bool gen_match = false;
-	unsigned i_gen_match;
+	unsigned i_gen_match = -1;
 	
 	for(unsigned igen=0; igen<GenParts.size(); igen++){
-		if(delta2R(lep_eta,lep_phi,GenParts[igen].eta,GenParts[igen].phi)<dRcut && abs(GenParts[igen].pdgId)==lep_pdgId){
-			if(GenParts[igen].status==1){
+		if(GenParts[igen].status==1 && abs(GenParts[igen].pdgId)==lep_pdgId){
+			if(delta2R(lep_eta,lep_phi,GenParts[igen].eta,GenParts[igen].phi)<dRcut){
+				dRcut = delta2R(lep_eta,lep_phi,GenParts[igen].eta,GenParts[igen].phi);
 				gen_match = true;
 				i_gen_match = igen;
 			}
 		}
 	}
-	
-	int mom_pdgId = (GenParts[i_gen_match].momstatus == 2) ? (abs(GenParts[i_gen_match].grmompdgId)) : (abs(GenParts[i_gen_match].mompdgId));
+
 	int genPartFlav = -100;
 	
 	if(gen_match){	
+		
+		int mom_pdgId = (GenParts[i_gen_match].momstatus == 2) ? (abs(GenParts[i_gen_match].grmompdgId)) : (abs(GenParts[i_gen_match].mompdgId));
+		
 		//if (mom_pdgId==24 || mom_pdgId==23 || mom_pdgId==25 || 
 		if (GenParts[i_gen_match].isPromptFinalState){
 			if (mom_pdgId==22){
@@ -289,7 +292,7 @@ int getGenPartonFlavor(float lep_eta, float lep_phi, vector<GenParton>GenParts, 
 	else{
 			genPartFlav = -100;
 	}
-	
+		
 	return 	genPartFlav;
 }
 
@@ -763,8 +766,9 @@ private:
   
   float lepton_jetPtRelv2, lepton_jetRelIso, lepton_jetbtag;
   
-  bool label_Muon_Prompt, label_Muon_fromTau, label_Muon_fromHadron, label_Muon_fromPhoton, label_Muon_unknown;
-  bool label_Electron_Prompt, label_Electron_fromTau, label_Electron_fromHadron, label_Electron_fromPhoton, label_Electron_unknown;
+  int label_Muon_Prompt, label_Muon_fromTau, label_Muon_fromHadron, label_Muon_fromPhoton, label_Muon_unknown;
+  int label_Electron_Prompt, label_Electron_fromTau, label_Electron_fromHadron, label_Electron_fromPhoton, label_Electron_unknown;
+  int label_unknown;
   
   // scalar end
   
@@ -980,16 +984,17 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   
   // Labels //
   
-  T1->Branch("label_Muon_Prompt", &label_Muon_Prompt, "label_Muon_Prompt/O");
-  T1->Branch("label_Muon_fromHadron", &label_Muon_fromHadron, "label_Muon_fromHadron/O");
-  T1->Branch("label_Muon_fromTau", &label_Muon_fromTau, "label_Muon_fromTau/O");
-  T1->Branch("label_Muon_fromPhoton", &label_Muon_fromPhoton, "label_Muon_fromPhoton/O");
-  T1->Branch("label_Muon_unknown", &label_Muon_unknown, "label_Muon_unknown/O");
-  T1->Branch("label_Electron_Prompt", &label_Electron_Prompt, "label_Electron_Prompt/O");
-  T1->Branch("label_Electron_fromTau", &label_Electron_fromTau, "label_Electron_fromTau/O");
-  T1->Branch("label_Electron_fromHadron", &label_Electron_fromHadron, "label_Electron_fromHadron/O");
-  T1->Branch("label_Electron_fromPhoton", &label_Electron_fromPhoton, "label_Electron_fromPhoton/O");
-  T1->Branch("label_Electron_unknown", &label_Electron_unknown, "label_Electron_unknown/O");
+  T1->Branch("label_Muon_Prompt", &label_Muon_Prompt, "label_Muon_Prompt/I");
+  T1->Branch("label_Muon_fromHadron", &label_Muon_fromHadron, "label_Muon_fromHadron/I");
+  T1->Branch("label_Muon_fromTau", &label_Muon_fromTau, "label_Muon_fromTau/I");
+  T1->Branch("label_Muon_fromPhoton", &label_Muon_fromPhoton, "label_Muon_fromPhoton/I");
+  T1->Branch("label_Muon_unknown", &label_Muon_unknown, "label_Muon_unknown/I");
+  T1->Branch("label_Electron_Prompt", &label_Electron_Prompt, "label_Electron_Prompt/I");
+  T1->Branch("label_Electron_fromTau", &label_Electron_fromTau, "label_Electron_fromTau/I");
+  T1->Branch("label_Electron_fromHadron", &label_Electron_fromHadron, "label_Electron_fromHadron/I");
+  T1->Branch("label_Electron_fromPhoton", &label_Electron_fromPhoton, "label_Electron_fromPhoton/I");
+  T1->Branch("label_Electron_unknown", &label_Electron_unknown, "label_Electron_unknown/I");
+  T1->Branch("label_unknown", &label_unknown, "label_unknown/I");
   
   // common kinematic variables //
   

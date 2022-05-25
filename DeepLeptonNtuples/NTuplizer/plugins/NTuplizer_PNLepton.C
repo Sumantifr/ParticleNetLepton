@@ -316,7 +316,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
   }// muon loop 
   
   // Electrons //
-    
+  
   for(const auto& electron1 : iEvent.get(tok_electrons_) ) {                                                                                          
  
     if (!StoreElectron(electron1,minePt,maxEta)) continue;
@@ -359,8 +359,9 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
     lepton.ip3d =  electron1.dB(pat::Electron::PV3D); 
     lepton.sip3d =  electron1.dB(pat::Electron::PV3D)/electron1.edB(pat::Electron::PV3D);    
     
+    
     // Displacement w.r.t secondary vertex //
-                                                                                                                                                   
+                                                                                                                                                
     lepton.dxy_sv = DistanceFromSV_Electron(gsftrk1,secondaryVertices);                                                                                          
     
     // GEN particle matching //
@@ -369,7 +370,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		lepton.genPartFlav = getGenPartonFlavor(lepton.eta,lepton.phi,GenPartons,11);
 	}else{
 		lepton.genPartFlav = -100;
-	}
+	} 
     
     // supercluste info //
     
@@ -400,7 +401,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 	                                                                                                        
 	lepton.convtxprob = electron1.convVtxFitProb();   
 	lepton.fbrem = electron1.fbrem();                         
-	                                                                    
+	                                                                 
     // isolation variables //                              
                                                                                                                                                                                        
     const reco::GsfElectron::PflowIsolationVariables& pfIso = electron1.pfIsolationVariables();  
@@ -408,19 +409,19 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
     lepton.pfRelIso03_NeutralHadron = pfIso.sumNeutralHadronEt*1./electron1.pt(); 
     lepton.pfRelIso03_Photon = pfIso.sumPhotonEt*1./electron1.pt();                                                                                                                         
     lepton.pfRelIso03_drcor = (pfIso.sumChargedHadronPt + max(0., pfIso.sumNeutralHadronEt + pfIso.sumPhotonEt - 0.5*pfIso.sumPUPt))*1./electron1.pt();   
-  
-    lepton.dr03EcalRecHitSumEt_Rel = electron1.dr03EcalRecHitSumEt()*1./electron1.pt(); 
-    lepton.dr03HcalDepth1TowerSumEt_Rel = electron1.dr03HcalDepth1TowerSumEt()*1./electron1.pt(); 
-    lepton.dr03HcalDepth2TowerSumEt_Rel = electron1.dr03HcalDepth2TowerSumEt()*1./electron1.pt();
-    lepton.dr03TkSumPt_Rel =  electron1.dr03TkSumPt()*1./electron1.pt();
-    lepton.dr03TkSumPtHEEP_Rel =  electron1.dr03TkSumPtHEEP()*1./electron1.pt();
-    /*
-    const reco::GsfElectron::PflowIsolationVariables& PfIso = electron1.isolationVariables04();//dr04IsolationVariables(); //pfIsolationVariables();  
-    lepton.pfRelIso04_ChargedHadron = PfIso.sumChargedHadronPt*1./electron1.pt();                                                                
-    lepton.pfRelIso04_NeutralHadron = PfIso.sumNeutralHadronEt*1./electron1.pt(); 
-    lepton.pfRelIso04_Photon = PfIso.sumPhotonEt*1./electron1.pt();                                                                                                                         
-    lepton.pfRelIso04_drcor = (PfIso.sumChargedHadronPt + max(0., PfIso.sumNeutralHadronEt + PfIso.sumPhotonEt - 0.5*PfIso.sumPUPt))*1./electron1.pt();   
-    */
+   
+    lepton.dr03EcalRecHitSumEt_Rel = (electron1.pt()>35.)?(electron1.dr03EcalRecHitSumEt()*1./electron1.pt()):-100; 
+    lepton.dr03HcalDepth1TowerSumEt_Rel = (electron1.pt()>35.)?(electron1.dr03HcalDepth1TowerSumEt()*1./electron1.pt()):-100; 
+    lepton.dr03HcalDepth2TowerSumEt_Rel = (electron1.pt()>35.)?(electron1.dr03HcalDepth2TowerSumEt()*1./electron1.pt()):-100;
+    lepton.dr03TkSumPt_Rel =  (electron1.pt()>35.)?(electron1.dr03TkSumPt()*1./electron1.pt()):-100;
+    lepton.dr03TkSumPtHEEP_Rel =  (electron1.pt()>35.)?(electron1.dr03TkSumPtHEEP()*1./electron1.pt()):-100;
+    
+    //const reco::GsfElectron::PflowIsolationVariables& PfIso = electron1.isolationVariables04();//dr04IsolationVariables(); //pfIsolationVariables();  
+    //lepton.pfRelIso04_ChargedHadron = PfIso.sumChargedHadronPt*1./electron1.pt();                                                                
+    //lepton.pfRelIso04_NeutralHadron = PfIso.sumNeutralHadronEt*1./electron1.pt(); 
+    //lepton.pfRelIso04_Photon = PfIso.sumPhotonEt*1./electron1.pt();                                                                                                                         
+    //lepton.pfRelIso04_drcor = (PfIso.sumChargedHadronPt + max(0., PfIso.sumNeutralHadronEt + PfIso.sumPhotonEt - 0.5*PfIso.sumPUPt))*1./electron1.pt();   
+    
     vector<float> pfisovalues;                                                                                     
     Read_ElePFIsolation(&electron1,Rho,pfisovalues);
     lepton.pfRelIso03_eacor = pfisovalues[0];
@@ -515,7 +516,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
     if(nPFJetAK4 >= njetmx) { break;}
     
   }
-    
+   
   // Skimming condition //
   
   if((nLepton)>=1){
@@ -534,23 +535,27 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		
 		// create generator labels //
 		
-		label_Muon_Prompt = label_Muon_fromTau = label_Muon_fromHadron = label_Muon_fromPhoton = label_Muon_unknown = false;
-		label_Electron_Prompt = label_Electron_fromTau = label_Electron_fromHadron = label_Electron_fromPhoton = label_Electron_unknown = false;
+		label_Muon_Prompt = label_Muon_fromTau = label_Muon_fromHadron = label_Muon_fromPhoton = label_Muon_unknown = 0;
+		label_Electron_Prompt = label_Electron_fromTau = label_Electron_fromHadron = label_Electron_fromPhoton = label_Electron_unknown = 0;
+		label_unknown = 0;
 		
 		if(abs(leptons[ilep].pdgId)==13){
-			if(leptons[ilep].genPartFlav==1) { label_Muon_Prompt = true; }
-			else if (leptons[ilep].genPartFlav==15) { label_Muon_fromTau = true; }
-			else if (leptons[ilep].genPartFlav==5 || leptons[ilep].genPartFlav==4) { label_Muon_fromHadron = true; }
-			else if (leptons[ilep].genPartFlav==22) { label_Muon_fromPhoton = true; }
-			else { label_Muon_unknown = true; }
+			if(leptons[ilep].genPartFlav==1) { label_Muon_Prompt = 1; }
+			else if (leptons[ilep].genPartFlav==15) { label_Muon_fromTau = 1; }
+			else if (leptons[ilep].genPartFlav==5 || leptons[ilep].genPartFlav==4) { label_Muon_fromHadron = 1; }
+			else if (leptons[ilep].genPartFlav==22) { label_Muon_fromPhoton = 1; }
+			else { label_Muon_unknown = 1; }
+		}
+		else if(abs(leptons[ilep].pdgId)==11){
+			if(leptons[ilep].genPartFlav==1) { label_Electron_Prompt = 1; }
+			else if (leptons[ilep].genPartFlav==15) { label_Electron_fromTau = 1; }
+			else if (leptons[ilep].genPartFlav==5 || leptons[ilep].genPartFlav==4) { label_Electron_fromHadron = 1; }
+			else if (leptons[ilep].genPartFlav==22) { label_Electron_fromPhoton = 1; }
+			else { label_Electron_unknown = 1; }
 		}
 		
-		if(abs(leptons[ilep].pdgId)==11){
-			if(leptons[ilep].genPartFlav==1) { label_Electron_Prompt = true; }
-			else if (leptons[ilep].genPartFlav==15) { label_Electron_fromTau = true; }
-			else if (leptons[ilep].genPartFlav==5 || leptons[ilep].genPartFlav==4) { label_Electron_fromHadron = true; }
-			else if (leptons[ilep].genPartFlav==22) { label_Electron_fromPhoton = true; }
-			else { label_Electron_unknown = true; }
+		if((label_Muon_Prompt+label_Muon_fromTau+label_Muon_fromHadron+label_Muon_fromPhoton+label_Muon_unknown+label_Electron_Prompt+label_Electron_fromTau+label_Electron_fromHadron+label_Electron_fromPhoton+label_Electron_unknown)<1){
+			label_unknown = 1;
 		}
 		
 		// created generator labels //
@@ -651,7 +656,8 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
   
 		lepton_closeTrackNLayers = leptons[ilep].closeTrackNLayers;
 		lepton_closeTrackNormChi2 = leptons[ilep].closeTrackNormChi2;
-	
+		
+		
 		// PF candidates within dR<0.5 around lepton //
 		
 		nPFCand = 0;  
@@ -808,6 +814,8 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		nChargePFCand = (int)ChargePFCand_deta.size();
 		nNeutralPFCand = (int)NeutralPFCand_deta.size();
 		
+		// secondary vertices within dR=0.5 //
+		
 		nSV = 0;
 		
 		SV_x.clear(); SV_y.clear(); SV_z.clear(); 
@@ -853,6 +861,8 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 			} // DR condition
 			
 		}// loop over secondary vertices	
+		
+		// nearest jet //
 		
 		float dR_lj_min = 0.4;
 		int i_nearjet = -1;
