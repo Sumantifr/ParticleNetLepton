@@ -27,6 +27,8 @@ Lepton identification using ParticleNet.
 
 - cmsenv
 
+- *If needed*, 'source /cvmfs/cms.cern.ch/crab3/crab.sh' OR 'source /cvmfs/cms.cern.ch/common/crab-setup.sh'
+
 *Create voms proxy*
 
 - check sample names (& nicknames) in generate_crab_miniaod_UL18.sh
