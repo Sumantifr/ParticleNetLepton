@@ -7,7 +7,7 @@ Lepton identification using ParticleNet.
 
 - cd CMSSW_10_6_29/src
 
-- git clone git@github.com:Sumantifr/ParticleNetLepton.git . 
+- git clone git@github.com:Sumantifr/ParticleNetLepton.git . o<br/> 
   (OR, git clone https://github.com/Sumantifr/ParticleNetLepton.git .)
 
 - cmsenv
