@@ -1,6 +1,20 @@
 # ParticleNetLepton
-Lepton identification using ParticleNet
+Lepton identification using ParticleNet. 
 
-cmsrel CMSSW_10_6_29
+##Follow the steps below to set up the framework
 
-cd CMSSW_10_6_29/src
+- cmsrel CMSSW_10_6_29
+
+- cd CMSSW_10_6_29/src
+
+- git clone git@github.com:Sumantifr/ParticleNetLepton.git .
+
+- cmsenv
+
+- scram b -j10
+
+- cd DeepLeptonNtuples/NTuplizer/test/
+
+#Create voms proxy  
+
+- cmsRun PNet_MC_MINIAOD_cfg.py 
