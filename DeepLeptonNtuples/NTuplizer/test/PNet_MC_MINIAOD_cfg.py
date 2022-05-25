@@ -192,7 +192,7 @@ process.deepntuplizer =  cms.EDAnalyzer('PNLepton',
 	 Read_btagging_SF = cms.untracked.bool(False),
 	 Subtract_Lepton_fromAK8 = cms.untracked.bool(True),
 	 Subtract_Lepton_fromAK4 = cms.untracked.bool(True),
-	 Save_only_Muons  = cms.untracked.bool(False),
+	 Save_only_Muons  = cms.untracked.bool(True),
 	 Save_only_Electrons  = cms.untracked.bool(False),
 
 #	 PFJetsAK8 = cms.InputTag("slimmedJetsAK8"),

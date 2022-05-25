@@ -525,10 +525,10 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 	for(unsigned ilep=0; ilep<leptons.size(); ilep++){
 	
 		if(save_only_muons) { 
-			if (abs(leptons[ilep].pdgId) != 13) continue;
+			if (abs(leptons[ilep].pdgId)!=13) continue;
 		}
 		else if(save_only_electrons) { 
-			if (abs(leptons[ilep].pdgId) != 11) continue;
+			if (abs(leptons[ilep].pdgId)!=11) continue;
 		}
 	
 		lepton_genPartFlav = leptons[ilep].genPartFlav;
@@ -541,6 +541,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		label_unknown = 0;
 		
 		if(abs(leptons[ilep].pdgId)==13){
+			label_Muon = true;
 			if(leptons[ilep].genPartFlav==1) { label_Muon_Prompt = 1; }
 			else if (leptons[ilep].genPartFlav==15) { label_Muon_fromTau = 1; }
 			else if (leptons[ilep].genPartFlav==5 || leptons[ilep].genPartFlav==4) { label_Muon_fromHadron = 1; }
@@ -548,6 +549,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 			else { label_Muon_unknown = 1; }
 		}
 		else if(abs(leptons[ilep].pdgId)==11){
+			label_Electron = true;
 			if(leptons[ilep].genPartFlav==1) { label_Electron_Prompt = 1; }
 			else if (leptons[ilep].genPartFlav==15) { label_Electron_fromTau = 1; }
 			else if (leptons[ilep].genPartFlav==5 || leptons[ilep].genPartFlav==4) { label_Electron_fromHadron = 1; }
@@ -670,7 +672,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 			edm::View<pat::PackedCandidate>::const_iterator pfcand1;     
 			
 			float dRmax = 0.5;  
-			float dRmin = 1.e-3;                                                                                               
+			float dRmin = 5.e-3;                                                                                               
 
 			for( pfcand1 = pfcands->begin(); pfcand1 < pfcands->end(); pfcand1++ ) {    
 		
@@ -690,17 +692,27 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		
 					pfcand.status = pfcand1->status();
 					pfcand.caloFraction = pfcand1->caloFraction();
-					pfcand.hcalFraction = pfcand1->hcalFraction();
 					
-					pfcand.isElectron = pfcand1->isElectron();
-					pfcand.isMuon = pfcand1->isMuon();
-					pfcand.isPhoton = pfcand1->isPhoton();
-					pfcand.isConvertedPhoton = pfcand1->isConvertedPhoton();
+					pfcand.hcalFraction = 0;
+					if (pfcand.pdgId == 1 || pfcand.pdgId == 130) {
+						pfcand.hcalFraction = pfcand1->hcalFraction();
+					} else if (pfcand1->isIsolatedChargedHadron()) {
+						pfcand.hcalFraction = pfcand1->rawHcalFraction();
+					}
+
+					pfcand.hcalFractionCalib = pfcand1->hcalFraction();
+					
+					pfcand.isElectron = (pfcand1->isElectron() || abs(pfcand.pdgId)==11);
+					pfcand.isMuon = (pfcand1->isMuon() || abs(pfcand.pdgId)==13);
+					pfcand.isPhoton = (pfcand1->isPhoton() || abs(pfcand.pdgId)==22);
+					pfcand.isChargedHadron = (abs(pfcand.pdgId)==211);
+					pfcand.isNeutralHadron = (abs(pfcand.pdgId)==211);
 					
 					pfcand.hasTrackDetails = pfcand1->hasTrackDetails();
 		
 					if(pfcand1->hasTrackDetails()){
 			
+						pfcand.fromPV = pfcand1->fromPV();
 						pfcand.time = pfcand1->time();
 						pfcand.charge = pfcand1->charge();
 						pfcand.dz = pfcand1->dz();
@@ -713,9 +725,11 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 						pfcand.trackHighPurity = pfcand1->trackHighPurity();
 						pfcand.pixelhits = pfcand1->numberOfPixelHits();
 						
-						const reco::Track *trktrk = pfcand1->bestTrack();
-						pfcand.trkChi2 = trktrk->normalizedChi2();
-						pfcand.nTrackerLayers = trktrk->hitPattern().trackerLayersWithMeasurement();
+						if(pfcand1->bestTrack()){
+							const reco::Track *trktrk = pfcand1->bestTrack();
+							pfcand.trkChi2 = trktrk->normalizedChi2();
+							pfcand.nTrackerLayers = trktrk->hitPattern().trackerLayersWithMeasurement();
+						}
 	
 						//cout<<pfcand1->ptTrk()<<" "<<<endl;
 						//cout<<pfcand1->vertexNormalizedChi2()<<"\t"
@@ -740,10 +754,12 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		ChargePFCand_eta_rel.clear();
 		ChargePFCand_phi_rel.clear();
 		ChargePFCand_phiAtVtx_rel.clear();
+		ChargePFCand_deltaR.clear();
 		ChargePFCand_puppiWeight.clear();
 		ChargePFCand_puppiWeightNoLep.clear();
 		ChargePFCand_caloFraction.clear();
 		ChargePFCand_hcalFraction.clear();
+		ChargePFCand_hcalFractionCalib.clear();
 		ChargePFCand_pdgId.clear();
 		
 		ChargePFCand_dz.clear();
@@ -764,18 +780,22 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		ChargePFCand_trackHighPurity.clear();
 		ChargePFCand_isElectron.clear();
 		ChargePFCand_isMuon.clear();
+		ChargePFCand_isChargedHadron.clear();
+		ChargePFCand_fromPV.clear();
 		
 		NeutralPFCand_pt_rel.clear();
 		NeutralPFCand_eta_rel.clear();
 		NeutralPFCand_phi_rel.clear();
 		NeutralPFCand_phiAtVtx_rel.clear();
+		NeutralPFCand_deltaR.clear();
 		NeutralPFCand_puppiWeight.clear();
 		NeutralPFCand_puppiWeightNoLep.clear();
 		NeutralPFCand_caloFraction.clear();
 		NeutralPFCand_hcalFraction.clear();
+		NeutralPFCand_hcalFractionCalib.clear();
 		NeutralPFCand_pdgId.clear();
 		NeutralPFCand_isPhoton.clear();
-		NeutralPFCand_isConvertedPhoton.clear();
+		NeutralPFCand_isNeutralHadron.clear();
 		
 		for(unsigned ipf=0; ipf<pfcandidates.size(); ipf++){
 			
@@ -786,11 +806,13 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 				ChargePFCand_pt_rel.push_back(pfcandidates[ipf].pt/lepton_pt);
 				ChargePFCand_eta_rel.push_back(pfcandidates[ipf].eta - lepton_eta);
 				ChargePFCand_phi_rel.push_back(PhiInRange(pfcandidates[ipf].phi - lepton_phi));
-				ChargePFCand_phiAtVtx_rel.push_back(PhiInRange(pfcandidates[ipf].phiAtVtx - lepton_phi));;
+				ChargePFCand_phiAtVtx_rel.push_back(PhiInRange(pfcandidates[ipf].phiAtVtx - lepton_phi));
+				ChargePFCand_deltaR.push_back(delta2R(pfcandidates[ipf].eta,pfcandidates[ipf].phi,lepton_eta,lepton_phi));
 				ChargePFCand_puppiWeight.push_back(pfcandidates[ipf].puppiWeight);
 				ChargePFCand_puppiWeightNoLep.push_back(pfcandidates[ipf].puppiWeightNoLep);
 				ChargePFCand_caloFraction.push_back(pfcandidates[ipf].caloFraction);
 				ChargePFCand_hcalFraction.push_back(pfcandidates[ipf].hcalFraction);
+				ChargePFCand_hcalFractionCalib.push_back(pfcandidates[ipf].hcalFractionCalib);
 				ChargePFCand_pdgId.push_back(pfcandidates[ipf].pdgId);
   
 				ChargePFCand_dz.push_back(pfcandidates[ipf].dz);
@@ -812,7 +834,8 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 				ChargePFCand_trackHighPurity.push_back(pfcandidates[ipf].trackHighPurity);
 				ChargePFCand_isElectron.push_back(pfcandidates[ipf].isElectron);
 				ChargePFCand_isMuon.push_back(pfcandidates[ipf].isMuon);
-			
+				ChargePFCand_isChargedHadron.push_back(pfcandidates[ipf].isChargedHadron);
+				ChargePFCand_fromPV.push_back(pfcandidates[ipf].fromPV);
 				}
 			}
 			
@@ -821,14 +844,16 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 				NeutralPFCand_pt_rel.push_back(pfcandidates[ipf].pt/lepton_pt);
 				NeutralPFCand_eta_rel.push_back(pfcandidates[ipf].eta - lepton_eta);
 				NeutralPFCand_phi_rel.push_back(PhiInRange(pfcandidates[ipf].phi - lepton_phi));
-				NeutralPFCand_phiAtVtx_rel.push_back(PhiInRange(pfcandidates[ipf].phiAtVtx - lepton_phi));;
+				NeutralPFCand_phiAtVtx_rel.push_back(PhiInRange(pfcandidates[ipf].phiAtVtx - lepton_phi));
+				NeutralPFCand_deltaR.push_back(delta2R(pfcandidates[ipf].eta,pfcandidates[ipf].phi,lepton_eta,lepton_phi));
 				NeutralPFCand_puppiWeight.push_back(pfcandidates[ipf].puppiWeight);
 				NeutralPFCand_puppiWeightNoLep.push_back(pfcandidates[ipf].puppiWeightNoLep);
 				NeutralPFCand_caloFraction.push_back(pfcandidates[ipf].caloFraction);
 				NeutralPFCand_hcalFraction.push_back(pfcandidates[ipf].hcalFraction);
+				NeutralPFCand_hcalFractionCalib.push_back(pfcandidates[ipf].hcalFractionCalib);
 				NeutralPFCand_pdgId.push_back(pfcandidates[ipf].pdgId);
 				NeutralPFCand_isPhoton.push_back(pfcandidates[ipf].isPhoton);
-				NeutralPFCand_isConvertedPhoton.push_back(pfcandidates[ipf].isConvertedPhoton);
+				NeutralPFCand_isNeutralHadron.push_back(pfcandidates[ipf].isNeutralHadron);
 				
 			}
   
@@ -844,9 +869,9 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		SV_mass.clear(), SV_pt_rel.clear(); 
 		SV_deltaR.clear(); SV_eta_rel.clear(); SV_phi_rel.clear(); 
 		SV_ndof.clear(); SV_chi2.clear(); SV_ntracks.clear();
-		SV_dlen.clear(), SV_dlenSig.clear();
-		SV_dxy.clear(); SV_dxySig.clear();
-		SV_pAngle.clear();
+		SV_d3d.clear(), SV_d3dError.clear(); SV_d3dSig.clear();
+		SV_dxy.clear(); SV_dxyError.clear(); SV_dxySig.clear();
+		SV_pAngle.clear(); SV_cospAngle.clear();
 		
 		for(unsigned int isv=0; isv<(secondaryVertices->size()); isv++){                                                                                        
 	
@@ -869,17 +894,20 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 				
 				VertexDistance3D vdist;
 				Measurement1D dl = vdist.distance(PV_vertex, VertexState(RecoVertex::convertPos(sv.position()), RecoVertex::convertError(sv.error())));
-				SV_dlen.push_back(dl.value());
-				SV_dlenSig.push_back(dl.significance());
+				SV_d3d.push_back(dl.value());
+				SV_d3dError.push_back(dl.error());
+				SV_d3dSig.push_back(dl.significance());
 			
 				VertexDistanceXY vdistXY;
 				Measurement1D d2d = vdistXY.distance(PV_vertex, VertexState(RecoVertex::convertPos(sv.position()), RecoVertex::convertError(sv.error())));
 				SV_dxy.push_back(d2d.value());
+				SV_dxyError.push_back(d2d.error());
 				SV_dxySig.push_back(d2d.significance());
 			
 				double dx = (PV_vertex.x() - sv.vx()), dy = (PV_vertex.y() - sv.vy()), dz = (PV_vertex.z() - sv.vz());
 				double pdotv = (dx * sv.px() + dy * sv.py() + dz * sv.pz()) / sv.p() / sqrt(dx * dx + dy * dy + dz * dz);
-				SV_pAngle.push_back( acos(pdotv));
+				SV_pAngle.push_back(acos(pdotv));
+				SV_cospAngle.push_back(pdotv);
 		
 				if (++nSV>=nconsmax) break;
 				  

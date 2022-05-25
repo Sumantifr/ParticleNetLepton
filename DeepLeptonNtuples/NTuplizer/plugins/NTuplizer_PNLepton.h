@@ -677,6 +677,7 @@ private:
   static const int njetmx = 20; 
   static const int npartmx = 50; 
   static const int nconsmax = 100; 
+  static const int nsvmax = 10;
   
   int irunold;
   int irun, ilumi, ifltr, ibrnch;
@@ -769,6 +770,7 @@ private:
   int label_Muon_Prompt, label_Muon_fromTau, label_Muon_fromHadron, label_Muon_fromPhoton, label_Muon_unknown;
   int label_Electron_Prompt, label_Electron_fromTau, label_Electron_fromHadron, label_Electron_fromPhoton, label_Electron_unknown;
   int label_unknown;
+  bool label_Muon, label_Electron;
   
   // scalar end
   
@@ -781,10 +783,12 @@ private:
   vector<float> ChargePFCand_eta_rel;
   vector<float> ChargePFCand_phi_rel;
   vector<float> ChargePFCand_phiAtVtx_rel;
+  vector<float> ChargePFCand_deltaR;
   vector<float> ChargePFCand_puppiWeight;
   vector<float> ChargePFCand_puppiWeightNoLep;
   vector<float> ChargePFCand_caloFraction;
   vector<float> ChargePFCand_hcalFraction;
+  vector<float> ChargePFCand_hcalFractionCalib;
   vector<int> ChargePFCand_pdgId;
   
   vector<float> ChargePFCand_dz;
@@ -806,19 +810,23 @@ private:
   vector<bool> ChargePFCand_trackHighPurity;
   vector<bool> ChargePFCand_isElectron;
   vector<bool> ChargePFCand_isMuon;
+  vector<bool> ChargePFCand_isChargedHadron;
+  vector<bool> ChargePFCand_fromPV;
   
   int nNeutralPFCand;
   vector<float> NeutralPFCand_pt_rel;
   vector<float> NeutralPFCand_eta_rel;
+  vector<float> NeutralPFCand_deltaR;
   vector<float> NeutralPFCand_phi_rel;
   vector<float> NeutralPFCand_phiAtVtx_rel;
   vector<float> NeutralPFCand_puppiWeight;
   vector<float> NeutralPFCand_puppiWeightNoLep;
   vector<float> NeutralPFCand_caloFraction;
   vector<float> NeutralPFCand_hcalFraction;
+  vector<float> NeutralPFCand_hcalFractionCalib;
   vector<int> NeutralPFCand_pdgId;
   vector<bool> NeutralPFCand_isPhoton;
-  vector<bool> NeutralPFCand_isConvertedPhoton;
+  vector<bool> NeutralPFCand_isNeutralHadron;
  
   // secondary vertices //
   int nSV;
@@ -831,10 +839,13 @@ private:
   vector<int> SV_ntracks;
   vector<int> SV_ndof;
   vector<float> SV_dxy;
+  vector<float> SV_dxyError;
   vector<float> SV_dxySig;
-  vector<float> SV_dlen;
-  vector<float> SV_dlenSig;
+  vector<float> SV_d3d;
+  vector<float> SV_d3dError;
+  vector<float> SV_d3dSig;
   vector<float> SV_pAngle;
+  vector<float> SV_cospAngle;
   
   // Collision Info //
  
@@ -1002,6 +1013,8 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   T1->Branch("label_Electron_fromPhoton", &label_Electron_fromPhoton, "label_Electron_fromPhoton/I");
   T1->Branch("label_Electron_unknown", &label_Electron_unknown, "label_Electron_unknown/I");
   T1->Branch("label_unknown", &label_unknown, "label_unknown/I");
+  T1->Branch("label_Muon", &label_Muon, "label_Muon/O");
+  T1->Branch("label_Electron", &label_Electron, "label_Electron/O");
   
   // common kinematic variables //
   
@@ -1145,10 +1158,12 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   T1->Branch("ChargePFCand_eta_rel",&ChargePFCand_eta_rel);
   T1->Branch("ChargePFCand_phi_rel",&ChargePFCand_phi_rel);
   T1->Branch("ChargePFCand_phiAtVtx_rel",&ChargePFCand_phiAtVtx_rel);
+  T1->Branch("ChargePFCand_deltaR",&ChargePFCand_deltaR);
   //T1->Branch("ChargePFCand_mass",&ChargePFCand_mass);
   T1->Branch("ChargePFCand_pdgId",&ChargePFCand_pdgId);
   T1->Branch("ChargePFCand_caloFraction",&ChargePFCand_caloFraction);
   T1->Branch("ChargePFCand_hcalFraction",&ChargePFCand_hcalFraction);
+  T1->Branch("ChargePFCand_hcalFractionCalib",&ChargePFCand_hcalFractionCalib);
   T1->Branch("ChargePFCand_puppiWeight",&ChargePFCand_puppiWeight);
   T1->Branch("ChargePFCand_puppiWeightNoLep",&ChargePFCand_puppiWeightNoLep);
   
@@ -1170,19 +1185,23 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   T1->Branch("ChargePFCand_trackHighPurity",&ChargePFCand_trackHighPurity);
   T1->Branch("ChargePFCand_isElectron",&ChargePFCand_isElectron);
   T1->Branch("ChargePFCand_isMuon",&ChargePFCand_isMuon);
+  T1->Branch("ChargePFCand_isChargedHadron",&ChargePFCand_isChargedHadron);
+  T1->Branch("ChargePFCand_fromPV",&ChargePFCand_fromPV);
   
   T1->Branch("NeutralPFCand_pt_rel",&NeutralPFCand_pt_rel);
   T1->Branch("NeutralPFCand_eta_rel",&NeutralPFCand_eta_rel);
   T1->Branch("NeutralPFCand_phi_rel",&NeutralPFCand_phi_rel);
   T1->Branch("NeutralPFCand_phiAtVtx_rel",&NeutralPFCand_phiAtVtx_rel);
+  T1->Branch("NeutralPFCand_deltaR",&NeutralPFCand_deltaR);
   //T1->Branch("NeutralPFCand_mass",&NeutralPFCand_mass);
   T1->Branch("NeutralPFCand_pdgId",&NeutralPFCand_pdgId);
   T1->Branch("NeutralPFCand_caloFraction",&NeutralPFCand_caloFraction);
   T1->Branch("NeutralPFCand_hcalFraction",&NeutralPFCand_hcalFraction);
+  T1->Branch("NeutralPFCand_hcalFractionCalib",&NeutralPFCand_hcalFractionCalib);
   T1->Branch("NeutralPFCand_puppiWeight",&NeutralPFCand_puppiWeight);
   T1->Branch("NeutralPFCand_puppiWeightNoLep",&NeutralPFCand_puppiWeightNoLep);
   T1->Branch("NeutralPFCand_isPhoton",&NeutralPFCand_isPhoton);
-  T1->Branch("NeutralPFCand_isConvertedPhoton",&NeutralPFCand_isConvertedPhoton);
+  T1->Branch("NeutralPFCand_isNeutralHadron",&NeutralPFCand_isNeutralHadron);
   
   // Secondary vertices //
   
@@ -1196,10 +1215,13 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   T1->Branch("SV_ntracks",&SV_ntracks);
   T1->Branch("SV_ndof",&SV_ndof);
   T1->Branch("SV_dxy",&SV_dxy);
+  T1->Branch("SV_dxyError",&SV_dxyError);
   T1->Branch("SV_dxySig",&SV_dxySig);
-  T1->Branch("SV_dlen",&SV_dlen);
-  T1->Branch("SV_dlenSig",&SV_dlenSig);
+  T1->Branch("SV_d3d",&SV_d3d);
+  T1->Branch("SV_d3dError",&SV_d3dError);
+  T1->Branch("SV_d3dSig",&SV_d3dSig);
   T1->Branch("SV_pAngle",&SV_pAngle);
+  T1->Branch("SV_cospAngle",&SV_cospAngle);
   
   // MC Info //
   

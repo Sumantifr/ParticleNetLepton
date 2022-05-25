@@ -268,6 +268,7 @@ class PFlowCandidate{
 		float vertexChi2;
 		float caloFraction;
 		float hcalFraction;
+		float hcalFractionCalib;
 		int pdgId;
 		int charge;
 		int lostInnerHits;
@@ -281,7 +282,9 @@ class PFlowCandidate{
 		bool isElectron;
 		bool isMuon;
 		bool isPhoton;
-		bool isConvertedPhoton;
+		bool isChargedHadron;
+		bool isNeutralHadron;
+		bool fromPV;
 		bool hasTrackDetails;
 };
 
@@ -302,6 +305,7 @@ void Initialize_PFlowCandidate(PFlowCandidate &pfcand){
 		pfcand.vertexChi2 = -100;
 		pfcand.caloFraction = -100;
 		pfcand.hcalFraction = -100;
+		pfcand.hcalFractionCalib = -100;
 		pfcand.pdgId = -100;
 		pfcand.charge = -100;
 		pfcand.lostInnerHits = -100;
@@ -315,6 +319,8 @@ void Initialize_PFlowCandidate(PFlowCandidate &pfcand){
 		pfcand.isElectron = false;
 		pfcand.isMuon = false;
 		pfcand.isPhoton = false;
-		pfcand.isConvertedPhoton = false;
+		pfcand.isChargedHadron = false;
+		pfcand.isNeutralHadron = false;
+		pfcand.fromPV = false;
 		pfcand.hasTrackDetails = false;
 };
