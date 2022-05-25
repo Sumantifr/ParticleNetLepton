@@ -9,7 +9,8 @@ Lepton identification using ParticleNet.
 
 - git clone git@github.com:Sumantifr/ParticleNetLepton.git . <br/> 
   OR <br/>
-  git clone https://github.com/Sumantifr/ParticleNetLepton.git .
+  git clone https://github.com/Sumantifr/ParticleNetLepton.git . <br/>
+  *(Don't forget '.')*
 
 - cmsenv
 
