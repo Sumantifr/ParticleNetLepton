@@ -278,7 +278,11 @@ class PFlowCandidate{
 		int status;
 		int time;
 		bool trackHighPurity;
- 
+		bool isElectron;
+		bool isMuon;
+		bool isPhoton;
+		bool isConvertedPhoton;
+		bool hasTrackDetails;
 };
 
 void Initialize_PFlowCandidate(PFlowCandidate &pfcand){
@@ -308,4 +312,9 @@ void Initialize_PFlowCandidate(PFlowCandidate &pfcand){
 		pfcand.status = -100;
 		pfcand.time = -100;
 		pfcand.trackHighPurity = false;
+		pfcand.isElectron = false;
+		pfcand.isMuon = false;
+		pfcand.isPhoton = false;
+		pfcand.isConvertedPhoton = false;
+		pfcand.hasTrackDetails = false;
 };

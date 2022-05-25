@@ -778,9 +778,9 @@ private:
   
   int nChargePFCand;
   vector<float> ChargePFCand_pt_rel;
-  vector<float> ChargePFCand_deta;
-  vector<float> ChargePFCand_dphi;
-  vector<float> ChargePFCand_dphiAtVtx;
+  vector<float> ChargePFCand_eta_rel;
+  vector<float> ChargePFCand_phi_rel;
+  vector<float> ChargePFCand_phiAtVtx_rel;
   vector<float> ChargePFCand_puppiWeight;
   vector<float> ChargePFCand_puppiWeightNoLep;
   vector<float> ChargePFCand_caloFraction;
@@ -789,8 +789,10 @@ private:
   
   vector<float> ChargePFCand_dz;
   vector<float> ChargePFCand_dzError;
+  vector<float> ChargePFCand_dzSig;
   vector<float> ChargePFCand_dxy;
   vector<float> ChargePFCand_dxyError;
+  vector<float> ChargePFCand_dxySig;
   vector<float> ChargePFCand_trkChi2;
   vector<float> ChargePFCand_vertexChi2;
   vector<int> ChargePFCand_charge;
@@ -802,26 +804,31 @@ private:
   vector<float> ChargePFCand_status;
   vector<float> ChargePFCand_time;
   vector<bool> ChargePFCand_trackHighPurity;
+  vector<bool> ChargePFCand_isElectron;
+  vector<bool> ChargePFCand_isMuon;
   
   int nNeutralPFCand;
   vector<float> NeutralPFCand_pt_rel;
-  vector<float> NeutralPFCand_deta;
-  vector<float> NeutralPFCand_dphi;
-  vector<float> NeutralPFCand_dphiAtVtx;
+  vector<float> NeutralPFCand_eta_rel;
+  vector<float> NeutralPFCand_phi_rel;
+  vector<float> NeutralPFCand_phiAtVtx_rel;
   vector<float> NeutralPFCand_puppiWeight;
   vector<float> NeutralPFCand_puppiWeightNoLep;
   vector<float> NeutralPFCand_caloFraction;
   vector<float> NeutralPFCand_hcalFraction;
   vector<int> NeutralPFCand_pdgId;
+  vector<bool> NeutralPFCand_isPhoton;
+  vector<bool> NeutralPFCand_isConvertedPhoton;
  
   // secondary vertices //
   int nSV;
-  vector<float> SV_x;
-  vector<float> SV_y;
-  vector<float> SV_z;
   vector<float> SV_pt_rel;
+  vector<float> SV_eta_rel;
+  vector<float> SV_phi_rel;
+  vector<float> SV_deltaR;
   vector<float> SV_mass;
   vector<float> SV_chi2;
+  vector<int> SV_ntracks;
   vector<int> SV_ndof;
   vector<float> SV_dxy;
   vector<float> SV_dxySig;
@@ -1135,9 +1142,9 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   T1->Branch("nPFCand",&nPFCand,"nPFCand/I");
   
   T1->Branch("ChargePFCand_pt_rel",&ChargePFCand_pt_rel);
-  T1->Branch("ChargePFCand_deta",&ChargePFCand_deta);
-  T1->Branch("ChargePFCand_dphi",&ChargePFCand_dphi);
-  T1->Branch("ChargePFCand_dphiAtVtx",&ChargePFCand_dphiAtVtx);
+  T1->Branch("ChargePFCand_eta_rel",&ChargePFCand_eta_rel);
+  T1->Branch("ChargePFCand_phi_rel",&ChargePFCand_phi_rel);
+  T1->Branch("ChargePFCand_phiAtVtx_rel",&ChargePFCand_phiAtVtx_rel);
   //T1->Branch("ChargePFCand_mass",&ChargePFCand_mass);
   T1->Branch("ChargePFCand_pdgId",&ChargePFCand_pdgId);
   T1->Branch("ChargePFCand_caloFraction",&ChargePFCand_caloFraction);
@@ -1147,10 +1154,12 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   
   T1->Branch("ChargePFCand_dz",&ChargePFCand_dz);
   T1->Branch("ChargePFCand_dzError",&ChargePFCand_dzError);
+  T1->Branch("ChargePFCand_dzSig",&ChargePFCand_dzSig);
   T1->Branch("ChargePFCand_dxy",&ChargePFCand_dxy);
   T1->Branch("ChargePFCand_dxyError",&ChargePFCand_dxyError);
-  T1->Branch("ChargePFCand_vertexChi2",&ChargePFCand_vertexChi2);
-  T1->Branch("ChargePFCand_time",&ChargePFCand_time);
+  T1->Branch("ChargePFCand_dxySig",&ChargePFCand_dxySig);
+  //T1->Branch("ChargePFCand_vertexChi2",&ChargePFCand_vertexChi2);
+  //T1->Branch("ChargePFCand_time",&ChargePFCand_time);
   T1->Branch("ChargePFCand_charge",&ChargePFCand_charge);
   T1->Branch("ChargePFCand_lostInnerHits",&ChargePFCand_lostInnerHits);
   T1->Branch("ChargePFCand_pvAssocQuality",&ChargePFCand_pvAssocQuality);
@@ -1159,28 +1168,33 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   T1->Branch("ChargePFCand_nTrackerLayers",&ChargePFCand_nTrackerLayers);
   T1->Branch("ChargePFCand_trkChi2",&ChargePFCand_trkChi2);
   T1->Branch("ChargePFCand_trackHighPurity",&ChargePFCand_trackHighPurity);
+  T1->Branch("ChargePFCand_isElectron",&ChargePFCand_isElectron);
+  T1->Branch("ChargePFCand_isMuon",&ChargePFCand_isMuon);
   
   T1->Branch("NeutralPFCand_pt_rel",&NeutralPFCand_pt_rel);
-  T1->Branch("NeutralPFCand_deta",&NeutralPFCand_deta);
-  T1->Branch("NeutralPFCand_dphi",&NeutralPFCand_dphi);
-  T1->Branch("NeutralPFCand_dphiAtVtx",&NeutralPFCand_dphiAtVtx);
+  T1->Branch("NeutralPFCand_eta_rel",&NeutralPFCand_eta_rel);
+  T1->Branch("NeutralPFCand_phi_rel",&NeutralPFCand_phi_rel);
+  T1->Branch("NeutralPFCand_phiAtVtx_rel",&NeutralPFCand_phiAtVtx_rel);
   //T1->Branch("NeutralPFCand_mass",&NeutralPFCand_mass);
   T1->Branch("NeutralPFCand_pdgId",&NeutralPFCand_pdgId);
   T1->Branch("NeutralPFCand_caloFraction",&NeutralPFCand_caloFraction);
   T1->Branch("NeutralPFCand_hcalFraction",&NeutralPFCand_hcalFraction);
   T1->Branch("NeutralPFCand_puppiWeight",&NeutralPFCand_puppiWeight);
   T1->Branch("NeutralPFCand_puppiWeightNoLep",&NeutralPFCand_puppiWeightNoLep);
+  T1->Branch("NeutralPFCand_isPhoton",&NeutralPFCand_isPhoton);
+  T1->Branch("NeutralPFCand_isConvertedPhoton",&NeutralPFCand_isConvertedPhoton);
   
   // Secondary vertices //
   
   T1->Branch("nSV",&nSV,"nSV/I");
-  T1->Branch("SV_x",&SV_x);
-  T1->Branch("SV_y",&SV_y);
-  T1->Branch("SV_z",&SV_z);
-  T1->Branch("SV_chi2",&SV_chi2);
-  T1->Branch("SV_ndof",&SV_ndof);
-  T1->Branch("SV_pt",&SV_pt_rel);
+  T1->Branch("SV_pt_rel",&SV_pt_rel);
   T1->Branch("SV_mass",&SV_mass);
+  T1->Branch("SV_eta_rel",&SV_eta_rel);
+  T1->Branch("SV_phi_rel",&SV_phi_rel);
+  T1->Branch("SV_deltaR",&SV_deltaR);
+  T1->Branch("SV_chi2",&SV_chi2);
+  T1->Branch("SV_ntracks",&SV_ntracks);
+  T1->Branch("SV_ndof",&SV_ndof);
   T1->Branch("SV_dxy",&SV_dxy);
   T1->Branch("SV_dxySig",&SV_dxySig);
   T1->Branch("SV_dlen",&SV_dlen);
