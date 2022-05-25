@@ -20,3 +20,20 @@ Lepton identification using ParticleNet.
 *Create voms proxy*
 
 - cmsRun PNet_MC_MINIAOD_cfg.py 
+
+## Running crab jobs on MC samples 
+
+- cd DeepLeptonNtuples/NTuplizer/test/
+
+- cmsenv
+
+*Create voms proxy*
+
+- check sample names (& nicknames) in generate_crab_miniaod_UL18.sh
+
+- If okay, run './generate_crab_miniaod_UL18.sh' <br/>
+  This will not submit crab jobs, but prepare all inputs needed for crab jobs & produce two scripts 'crab_submit.sh' and 'crab_monitor.sh', and cfg python files for each sample
+
+- If happy, submit the jobs by running './crab_submit.sh'
+
+- Monitor the job status by running './crab_monitor.sh'
