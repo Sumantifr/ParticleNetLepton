@@ -1,7 +1,7 @@
 # ParticleNetLepton
 Lepton identification using ParticleNet. 
 
-## Follow the steps below to set up the framework
+## Ntuple production 
 
 - cmsrel CMSSW_10_6_29
 
@@ -22,15 +22,9 @@ Lepton identification using ParticleNet.
 
 - cmsRun PNet_MC_MINIAOD_cfg.py 
 
-## Running crab jobs on MC samples 
-
-- cd DeepLeptonNtuples/NTuplizer/test/
-
-- cmsenv
+### Running crab jobs on MC samples 
 
 - *If needed*, 'source /cvmfs/cms.cern.ch/crab3/crab.sh' OR 'source /cvmfs/cms.cern.ch/common/crab-setup.sh'
-
-- voms-proxy-init -rfc -voms cms -valid 96:00
 
 - check sample names (& nicknames) in generate_crab_miniaod_UL18.sh
 
