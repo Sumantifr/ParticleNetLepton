@@ -15,6 +15,6 @@ Lepton identification using ParticleNet.
 
 - cd DeepLeptonNtuples/NTuplizer/test/
 
-_ Create voms proxy 
+*Create voms proxy*
 
 - cmsRun PNet_MC_MINIAOD_cfg.py 
