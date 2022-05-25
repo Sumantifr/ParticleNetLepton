@@ -1,7 +1,7 @@
 # ParticleNetLepton
 Lepton identification using ParticleNet. 
 
-##Follow the steps below to set up the framework
+## Follow the steps below to set up the framework
 
 - cmsrel CMSSW_10_6_29
 
@@ -15,6 +15,6 @@ Lepton identification using ParticleNet.
 
 - cd DeepLeptonNtuples/NTuplizer/test/
 
-#Create voms proxy  
+### Create voms proxy  
 
 - cmsRun PNet_MC_MINIAOD_cfg.py 
