@@ -71,10 +71,12 @@ inFiles = cms.untracked.vstring(
 'root://xrootd-cms.infn.it//store/mc/RunIISummer20UL18MiniAODv2/TTTo2L2Nu_TuneCP5_13TeV-powheg-pythia8/MINIAODSIM/106X_upgrade2018_realistic_v16_L1v1-v1/00000/04A0B676-D63A-6D41-B47F-F4CF8CBE7DB8.root'
    )
 
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(3000))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1000))
 
 #process.firstEvent = cms.untracked.PSet(input = cms.untracked.int32(5000))
-process.source = cms.Source("PoolSource", fileNames = inFiles )
+process.source = cms.Source("PoolSource", 
+fileNames = inFiles,
+skipEvents=cms.untracked.uint32(0))
 
 FastSIM = bool(True)
 
@@ -140,8 +142,7 @@ deep_discriminators = ["pfMassDecorrelatedDeepBoostedDiscriminatorsJetTags:TvsQC
                        "pfMassDecorrelatedParticleNetDiscriminatorsJetTags:XqqvsQCD",
 		       "pfParticleNetDiscriminatorsJetTags:TvsQCD",
 		       "pfParticleNetDiscriminatorsJetTags:WvsQCD",
-		       "pfParticleNetDiscriminatorsJetTags:ZvsQCD"
-                       
+		       "pfParticleNetDiscriminatorsJetTags:ZvsQCD"                      
 ]
 
 #from RecoBTag.MXNet.pfParticleNet_cff import _pfParticleNetJetTagsAll as pfParticleNetJetTagsAll
@@ -223,6 +224,11 @@ process.deepntuplizer =  cms.EDAnalyzer('PNLepton',
 	 PFJetsAK4 = cms.InputTag("slimmedJets"), 
 	 minjPt = cms.untracked.double(30.),
 	 maxEta = cms.untracked.double(3.),
+
+	 DR_PFCand_Maximum = cms.untracked.double(0.5),
+	 DR_PFCand_Minimum = cms.untracked.double(5.e-3),
+	 DR_SV_Maximum = cms.untracked.double(0.5),
+	 DR_AK4Jet_Maximum = cms.untracked.double(0.4),
 
 	 GENJetAK8 = cms.InputTag("slimmedGenJetsAK8"),
 	 GENJetAK4 = cms.InputTag("slimmedGenJets"),

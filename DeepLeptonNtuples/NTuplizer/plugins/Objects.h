@@ -85,8 +85,9 @@ class Lepton{
 		float pfRelIso04_Photon;
 		float pfRelIso04_PileUp;
 		// GEN matching //
+		int genPartIdx;
 		int genPartFlav;
-  
+		
 		// Electron-specific variables //
   
 		// ID booleans //
@@ -150,88 +151,89 @@ class Lepton{
 
 void Initialize(Lepton &lepton){
 	
-	lepton.pt = -100 ;
+	lepton.pt = 0 ;
 	lepton.eta = -100 ;
 	lepton.phi = -100 ;
-	lepton.mass = -100 ;
-	lepton.p = -100 ;
+	lepton.mass = 0 ;
+	lepton.p = 0 ;
 	
-	lepton.pdgId = -100 ;
-	lepton.charge = -100 ;
-	lepton.tightcharge = -100 ;
+	lepton.pdgId = 0 ;
+	lepton.charge = 0 ;
+	lepton.tightcharge = 0 ;
 		
-	lepton.dxy = -100;
-	lepton.dz = -100;
-	lepton.dxyError = -100;
-	lepton.dzError = -100;
-	lepton.ip3d = -100;
-	lepton.sip3d = -100;
-	lepton.dxy_sv = -100;
+	lepton.dxy = 0;
+	lepton.dz = 0;
+	lepton.dxyError = 0;
+	lepton.dzError = 0;
+	lepton.ip3d = 0;
+	lepton.sip3d = 0;
+	lepton.dxy_sv = 0;
 		
-	lepton.genPartFlav = -100;
+	lepton.genPartFlav = -1;
+	lepton.genPartIdx = 0;
   
-  	lepton.chi2 = -100;
-	lepton.ndof = -100;
-	lepton.trkKink = -100;
-	lepton.hit = -100;
-	lepton.pixhit = -100;
-	lepton.nTrackerLayers = -100;
-	lepton.lostHits = -100;
+  	lepton.chi2 = 999;
+	lepton.ndof = 0;
+	lepton.trkKink = 0;
+	lepton.hit = 0;
+	lepton.pixhit = 0;
+	lepton.nTrackerLayers = 0;
+	lepton.lostHits = -1;
     
-	lepton.e_ECAL = -100;
-	lepton.e_HCAL = -100;
-	lepton.hoe = -100;
+	lepton.e_ECAL = 0;
+	lepton.e_HCAL = 0;
+	lepton.hoe = 0;
 		  
-	lepton.minchiso = -100;
-	lepton.minnhiso = -100;
-	lepton.minphiso = -100;
-	lepton.minisoall = -100;
+	lepton.minchiso = 0;
+	lepton.minnhiso = 0;
+	lepton.minphiso = 0;
+	lepton.minisoall = 0;
 		
-	lepton.pfRelIso03_drcor = -100;
-	lepton.pfRelIso03_ChargedHadron = -100;
-	lepton.pfRelIso03_NeutralHadron = -100;
-	lepton.pfRelIso03_Photon = -100;
-	lepton.pfRelIso03_PileUp = -100;
-	lepton.tkRelIso = -100;
+	lepton.pfRelIso03_drcor = 0;
+	lepton.pfRelIso03_ChargedHadron = 0;
+	lepton.pfRelIso03_NeutralHadron = 0;
+	lepton.pfRelIso03_Photon = 0;
+	lepton.pfRelIso03_PileUp = 0;
+	lepton.tkRelIso = 0;
    
 	lepton.mvaid_Fallv2WP90 = false;
 	lepton.mvaid_Fallv2WP90_noIso = false;
 	lepton.mvaid_Fallv2WP80 = false;
 	lepton.mvaid_Fallv2WP80_noIso = false;
    
-	lepton.eoverp = -100;
+	lepton.eoverp = 0;
  
-	lepton.pfRelIso03_eacor = -100;
-	lepton.pfRelIso04_eacor = -100;
-	lepton.dr03EcalRecHitSumEt_Rel = -100;
-	lepton.dr03HcalDepth1TowerSumEt_Rel = -100;
-	lepton.dr03HcalDepth2TowerSumEt_Rel = -100;
-	lepton.dr03TkSumPt_Rel = -100;
-	lepton.dr03TkSumPtHEEP_Rel = -100;
+	lepton.pfRelIso03_eacor = 0;
+	lepton.pfRelIso04_eacor = 0;
+	lepton.dr03EcalRecHitSumEt_Rel = 0;
+	lepton.dr03HcalDepth1TowerSumEt_Rel = 0;
+	lepton.dr03HcalDepth2TowerSumEt_Rel = 0;
+	lepton.dr03TkSumPt_Rel = 0;
+	lepton.dr03TkSumPtHEEP_Rel = 0;
     
-	lepton.eInvMinusPInv = -100;
+	lepton.eInvMinusPInv = 0;
 	lepton.supcl_eta = -100;
 	lepton.supcl_phi = -100;
-	lepton.supcl_energy = -100;
-	lepton.sigmaietaieta = -100;
-	lepton.sigmaiphiiphi = -100;
-	lepton.r9full = -100;
-	lepton.hcaloverecal = -100;
-	lepton.ecloverpout = -100;
-	lepton.convVeto = -100;
-	lepton.etain = -100;
-	lepton.phiin = -100;
-	lepton.fbrem = -100;
-	lepton.supcl_etaWidth = -100;
-	lepton.supcl_phiWidth = -100;
+	lepton.supcl_energy = 999;
+	lepton.sigmaietaieta = 999;
+	lepton.sigmaiphiiphi = 999;
+	lepton.r9full = 999;
+	lepton.hcaloverecal = 0;
+	lepton.ecloverpout = 0;
+	lepton.convVeto = 0;
+	lepton.etain = 999;
+	lepton.phiin = 999;
+	lepton.fbrem = 0;
+	lepton.supcl_etaWidth = 999;
+	lepton.supcl_phiWidth = 999;
  
-	lepton.e1x5bye5x5 = -100;
-	lepton.convtxprob = -100;
-	lepton.deltaetacltrkcalo = -100;
-	lepton.supcl_preshvsrawe = -100;
+	lepton.e1x5bye5x5 = 0;
+	lepton.convtxprob = 0;
+	lepton.deltaetacltrkcalo = 0;
+	lepton.supcl_preshvsrawe = 0;
  
-	lepton.closeTrackNLayers = -100;
-	lepton.closeTrackNormChi2 = -100;
+	lepton.closeTrackNLayers = 0;
+	lepton.closeTrackNormChi2 = 999;
 	
 	lepton.isPFCand = false;
 	lepton.isGlobal = false;
@@ -244,9 +246,9 @@ void Initialize(Lepton &lepton){
 	lepton.isHighPt = false;
 	lepton.isHighPttrk = false;
   
-	lepton.posmatch = -100;
-	lepton.nStations = -100;
-	lepton.segmentComp = -100;
+	lepton.posmatch = 0;
+	lepton.nStations = 0;
+	lepton.segmentComp = 0;
  
 };
 
@@ -260,8 +262,10 @@ class PFlowCandidate{
 		float phiAtVtx;
 		float dz;
 		float dzError;
+		float dzSig;
 		float dxy;
 		float dxyError;
+		float dxySig;
 		float puppiWeight;
 		float puppiWeightNoLep;
 		float trkChi2;
@@ -273,7 +277,6 @@ class PFlowCandidate{
 		int charge;
 		int lostInnerHits;
 		float pvAssocQuality;
-		float trkQuality;
 		int nTrackerLayers;
 		int pixelhits;
 		int status;
@@ -295,25 +298,26 @@ void Initialize_PFlowCandidate(PFlowCandidate &pfcand){
 		pfcand.phi = -100;
 		pfcand.mass = -100;
 		pfcand.phiAtVtx = -100;
-		pfcand.dz = -100;
-		pfcand.dzError = -100;
-		pfcand.dxy = -100;
-		pfcand.dxyError = -100;
+		pfcand.dz = -0;
+		pfcand.dzError = 0;
+		pfcand.dzSig = 0;
+		pfcand.dxy = 0;
+		pfcand.dxyError = 0;
+		pfcand.dxySig = 0;
 		pfcand.puppiWeight = -100;
 		pfcand.puppiWeightNoLep = -100;
-		pfcand.trkChi2 = -100;
-		pfcand.vertexChi2 = -100;
-		pfcand.caloFraction = -100;
-		pfcand.hcalFraction = -100;
+		pfcand.trkChi2 = 999;
+		pfcand.vertexChi2 = 999;
+		pfcand.caloFraction = 0;
+		pfcand.hcalFraction = 0;
 		pfcand.hcalFractionCalib = -100;
-		pfcand.pdgId = -100;
-		pfcand.charge = -100;
-		pfcand.lostInnerHits = -100;
-		pfcand.pvAssocQuality = -100;
-		pfcand.trkQuality = -100;
-		pfcand.nTrackerLayers = -100;
-		pfcand.pixelhits = -100;
-		pfcand.status = -100;
+		pfcand.pdgId =  0;
+		pfcand.charge = 0;
+		pfcand.lostInnerHits = -1;
+		pfcand.pvAssocQuality = 0;
+		pfcand.nTrackerLayers = 0;
+		pfcand.pixelhits = 0;
+		pfcand.status = 0;
 		pfcand.time = -100;
 		pfcand.trackHighPurity = false;
 		pfcand.isElectron = false;

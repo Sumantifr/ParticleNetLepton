@@ -65,50 +65,74 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 			parton.isDirectPromptTauDecayProductFinalState = (*genparticles)[ig].isDirectPromptTauDecayProductFinalState();
 		
 			int mompdg, momstatus, grmompdg;
+			mompdg = momstatus = grmompdg = 0;
+			
+			if((*genparticles)[ig].numberOfMothers()>0){
+				
+				// mother pdg id & status //
+			
+				const Candidate * mom = (*genparticles)[ig].mother();
+				
+				while(mom->pdgId() == (*genparticles)[ig].pdgId())
+				{
+					mom = mom->mother();
+				}
+				
+				if(!(*genparticles)[ig].isPromptFinalState() && !(*genparticles)[ig].isDirectPromptTauDecayProductFinalState()){
+					while(mom->status()==2){
+						mom = mom->mother();	
+					}
+				}
+				
+				mompdg = mom->pdgId();
+				momstatus = mom->status();
 	  
-			// mother pdg id & status //
-			const Candidate * mom = (*genparticles)[ig].mother();
-			mompdg = mom->pdgId();
-			momstatus = mom->status();
-			const Candidate * momtmp = (*genparticles)[ig].mother();
-			while(mompdg == parton.pdgId)
-			{
-				mompdg = momtmp->mother()->pdgId();
-				momstatus = momtmp->mother()->status();
-				momtmp = momtmp->mother();
-			}
-	  
-			// grand-mother pdg id //
-			bool found_grmom = false;
-			if(mom->numberOfMothers()>0){
-				const Candidate * grmom  = mom->mother();
-				for(int iter=0; iter<10; iter++){
-					if(grmom->pdgId() != mom->pdgId()){
-						grmompdg  = grmom->pdgId();
-						found_grmom = true;
-						break;
-					}else{
+				// grand-mother pdg id //
+						
+				if(mom->numberOfMothers()>0){
+	
+					const Candidate * grmom = mom->mother();
+					
+					while(grmom->pdgId() == mompdg)
+					{
 						if(grmom->numberOfMothers()>0){
 							grmom = grmom->mother();
 						}
 						else{ break; }
 					}
-				}
-			}
-			if(!found_grmom){
-				grmompdg  = -10000000;
+					
+					grmompdg  = grmom->pdgId();	
+				} 
+				
 			}
 			
 			parton.mompdgId = mompdg;
 			parton.momstatus = momstatus;
 			parton.grmompdgId = grmompdg; 
-						
+					
 			GenPartons.push_back(parton);
     
 			if(int(GenPartons.size())>=npartmx) break;
 	
 		}
     }
+    
+    GenPart_pt.clear(); GenPart_eta.clear(); GenPart_phi.clear(); GenPart_mass.clear(); 
+    GenPart_pdgId.clear(); GenPart_mompdgId.clear(); GenPart_grmompdgId.clear(); 
+    
+    nGenPart = (int)(GenPartons.size());
+    
+    for(unsigned igen=0; igen<(GenPartons.size()); igen++){
+		
+		GenPart_pt.push_back(GenPartons[igen].pt);
+		GenPart_eta.push_back(GenPartons[igen].eta);
+		GenPart_phi.push_back(GenPartons[igen].phi);
+		GenPart_mass.push_back(GenPartons[igen].mass);
+		GenPart_pdgId.push_back(GenPartons[igen].pdgId);
+		GenPart_mompdgId.push_back(GenPartons[igen].mompdgId);
+		GenPart_grmompdgId.push_back(GenPartons[igen].grmompdgId);
+		
+	}
     
     // Pileup information //
     
@@ -251,11 +275,13 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 			lepton.dxy_sv = DistanceFromSV_Muon(muon1->muonBestTrack(),secondaryVertices);  
 			
 			// GEN particle matching //
-   
+			
 			if(isMC){
-				lepton.genPartFlav = getGenPartonFlavor(lepton.eta,lepton.phi,GenPartons,13);
+				lepton.genPartIdx  = getGenPartonIndex(lepton.eta,lepton.phi,GenPartons,13);
+				lepton.genPartFlav = getGenPartonFlavor(GenPartons,lepton.genPartIdx);
 			}else{
-				lepton.genPartFlav = -100;
+				lepton.genPartIdx = -1;
+				lepton.genPartFlav = 0;
 			}
     
 			// Energy info //
@@ -366,13 +392,15 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
     lepton.dxy_sv = DistanceFromSV_Electron(gsftrk1,secondaryVertices);                                                                                          
     
     // GEN particle matching //
-    
-    if(isMC){
-		lepton.genPartFlav = getGenPartonFlavor(lepton.eta,lepton.phi,GenPartons,11);
+  
+	if(isMC){
+		lepton.genPartIdx  = getGenPartonIndex(lepton.eta,lepton.phi,GenPartons,13);
+		lepton.genPartFlav = getGenPartonFlavor(GenPartons,lepton.genPartIdx);
 	}else{
-		lepton.genPartFlav = -100;
-	} 
-    
+		lepton.genPartIdx = -1;
+		lepton.genPartFlav = 0;
+	}
+      
     // supercluste info //
     
     lepton.supcl_energy = electron1.superCluster()->energy();  
@@ -536,30 +564,56 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		
 		// create generator labels //
 		
-		label_Muon_Prompt = label_Muon_fromTau = label_Muon_fromHadron = label_Muon_fromPhoton = label_Muon_unknown = 0;
-		label_Electron_Prompt = label_Electron_fromTau = label_Electron_fromHadron = label_Electron_fromPhoton = label_Electron_unknown = 0;
+		label_Muon_Prompt = label_Muon_fromTau = label_Muon_fromHFHadron = label_Muon_fromLFHadron = label_Muon_fromPhoton = label_Muon_unknown = label_Muon_fromPhotonORunknown = 0;
+		label_Electron_Prompt = label_Electron_fromTau = label_Electron_fromHFHadron = label_Electron_fromLFHadron = label_Electron_fromPhoton = label_Electron_unknown = label_Electron_fromPhotonORunknown = 0;
 		label_unknown = 0;
 		
 		if(abs(leptons[ilep].pdgId)==13){
 			label_Muon = true;
 			if(leptons[ilep].genPartFlav==1) { label_Muon_Prompt = 1; }
 			else if (leptons[ilep].genPartFlav==15) { label_Muon_fromTau = 1; }
-			else if (leptons[ilep].genPartFlav==5 || leptons[ilep].genPartFlav==4) { label_Muon_fromHadron = 1; }
 			else if (leptons[ilep].genPartFlav==22) { label_Muon_fromPhoton = 1; }
+			else if (leptons[ilep].genPartFlav==5 || leptons[ilep].genPartFlav==4) { label_Muon_fromHFHadron = 1; }
+			else if (leptons[ilep].genPartFlav==3) { label_Muon_fromLFHadron = 1; }
 			else { label_Muon_unknown = 1; }
 		}
 		else if(abs(leptons[ilep].pdgId)==11){
 			label_Electron = true;
 			if(leptons[ilep].genPartFlav==1) { label_Electron_Prompt = 1; }
 			else if (leptons[ilep].genPartFlav==15) { label_Electron_fromTau = 1; }
-			else if (leptons[ilep].genPartFlav==5 || leptons[ilep].genPartFlav==4) { label_Electron_fromHadron = 1; }
 			else if (leptons[ilep].genPartFlav==22) { label_Electron_fromPhoton = 1; }
+			else if (leptons[ilep].genPartFlav==5 || leptons[ilep].genPartFlav==4) { label_Electron_fromHFHadron = 1; }
+			else if (leptons[ilep].genPartFlav==3) { label_Electron_fromLFHadron = 1; }
 			else { label_Electron_unknown = 1; }
 		}
 		
-		if((label_Muon_Prompt+label_Muon_fromTau+label_Muon_fromHadron+label_Muon_fromPhoton+label_Muon_unknown+label_Electron_Prompt+label_Electron_fromTau+label_Electron_fromHadron+label_Electron_fromPhoton+label_Electron_unknown)<1){
+		if((label_Muon_Prompt+label_Muon_fromTau+label_Muon_fromHFHadron+label_Muon_fromLFHadron+label_Muon_fromPhoton+label_Muon_unknown+label_Electron_Prompt+label_Electron_fromTau+label_Electron_fromHFHadron+label_Electron_fromLFHadron+label_Electron_fromPhoton+label_Electron_unknown)<1){
 			label_unknown = 1;
 		}
+		
+		if((label_Muon_fromPhoton+label_Muon_unknown)==1) {  label_Muon_fromPhotonORunknown = 1;  }
+		if((label_Electron_fromPhoton+label_Electron_unknown)==1) {  label_Electron_fromPhotonORunknown = 1;  }
+		
+		label_fromTop = label_fromW = label_fromZ = label_fromH = label_fromNP = false;
+		label_fromQCD = label_fromQCD_b = label_fromQCD_c = label_fromQCD_l = label_others = label_noGenMatch = false;
+		
+		if(leptons[ilep].genPartIdx>=0){
+			if(leptons[ilep].genPartFlav==1){
+				if((abs(GenPartons[leptons[ilep].genPartIdx].mompdgId)==6) || (abs(GenPartons[leptons[ilep].genPartIdx].mompdgId)==24 && abs(GenPartons[leptons[ilep].genPartIdx].grmompdgId)==6)) { label_fromTop = true; }
+				if((abs(GenPartons[leptons[ilep].genPartIdx].mompdgId)==25) || (abs(GenPartons[leptons[ilep].genPartIdx].mompdgId)==24 && abs(GenPartons[leptons[ilep].genPartIdx].grmompdgId)==25)) { label_fromH = true; }
+				if(abs(GenPartons[leptons[ilep].genPartIdx].mompdgId)==24) { label_fromW = true; }
+				if(abs(GenPartons[leptons[ilep].genPartIdx].mompdgId)==23) { label_fromZ = true; }
+				label_fromNP = (!label_fromTop && !label_fromH && !label_fromW && !label_fromZ);
+			}
+			else if(leptons[ilep].genPartFlav==5 || leptons[ilep].genPartFlav==4 || leptons[ilep].genPartFlav==3){
+				label_fromQCD = true;
+				if(leptons[ilep].genPartFlav==5) { label_fromQCD_b = true; }
+				else if (leptons[ilep].genPartFlav==4) { label_fromQCD_c = true; }
+				else { label_fromQCD_l = true; }
+			}
+			else { label_others = true; }
+		}
+		else { label_noGenMatch = true; }
 		
 		// created generator labels //
 	
@@ -671,8 +725,8 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
     
 			edm::View<pat::PackedCandidate>::const_iterator pfcand1;     
 			
-			float dRmax = 0.5;  
-			float dRmin = 5.e-3;                                                                                               
+			float dRmax = DR_PFCand_Maximum;  
+			float dRmin = DR_PFCand_Minimum;                                                                                               
 
 			for( pfcand1 = pfcands->begin(); pfcand1 < pfcands->end(); pfcand1++ ) {    
 		
@@ -717,8 +771,10 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 						pfcand.charge = pfcand1->charge();
 						pfcand.dz = pfcand1->dz();
 						pfcand.dzError = pfcand1->dzError();
+						pfcand.dzSig = pfcand1->dz()*1./TMath::Max(float(pfcand1->dzError()),float(1.e-6));
 						pfcand.dxy = pfcand1->dxy();
 						pfcand.dxyError = pfcand1->dxyError();
+						pfcand.dxySig = pfcand1->dxy()*1./TMath::Max(float(pfcand1->dxyError()),float(1.e-6));
 						pfcand.vertexChi2 = pfcand1->vertexChi2();
 						pfcand.lostInnerHits = pfcand1->lostInnerHits();
 						pfcand.pvAssocQuality = pfcand1->pvAssociationQuality();
@@ -750,39 +806,38 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 	
 		}
 		
-		ChargePFCand_pt_rel.clear();
-		ChargePFCand_eta_rel.clear();
-		ChargePFCand_phi_rel.clear();
-		ChargePFCand_phiAtVtx_rel.clear();
-		ChargePFCand_deltaR.clear();
-		ChargePFCand_puppiWeight.clear();
-		ChargePFCand_puppiWeightNoLep.clear();
-		ChargePFCand_caloFraction.clear();
-		ChargePFCand_hcalFraction.clear();
-		ChargePFCand_hcalFractionCalib.clear();
-		ChargePFCand_pdgId.clear();
+		PFCand_pt_rel.clear();
+		PFCand_eta_rel.clear();
+		PFCand_phi_rel.clear();
+		PFCand_phiAtVtx_rel.clear();
+		PFCand_deltaR.clear();
+		PFCand_puppiWeight.clear();
+		PFCand_puppiWeightNoLep.clear();
+		PFCand_caloFraction.clear();
+		PFCand_hcalFraction.clear();
+		PFCand_hcalFractionCalib.clear();
+		PFCand_pdgId.clear();
 		
-		ChargePFCand_dz.clear();
-		ChargePFCand_dzError.clear();
-		ChargePFCand_dzSig.clear();
-		ChargePFCand_dxy.clear();
-		ChargePFCand_dxyError.clear();
-		ChargePFCand_dxySig.clear();
-		ChargePFCand_trkChi2.clear();
-		ChargePFCand_vertexChi2.clear();
-		ChargePFCand_charge.clear();
-		ChargePFCand_pvAssocQuality.clear();
-		ChargePFCand_trkQuality.clear();
-		ChargePFCand_nTrackerLayers.clear();
-		ChargePFCand_pixelhits.clear();
-		ChargePFCand_status.clear();
-		ChargePFCand_time.clear();
-		ChargePFCand_trackHighPurity.clear();
-		ChargePFCand_isElectron.clear();
-		ChargePFCand_isMuon.clear();
-		ChargePFCand_isChargedHadron.clear();
-		ChargePFCand_fromPV.clear();
-		
+		PFCand_dz.clear();
+		PFCand_dzError.clear();
+		PFCand_dzSig.clear();
+		PFCand_dxy.clear();
+		PFCand_dxyError.clear();
+		PFCand_dxySig.clear();
+		PFCand_trkChi2.clear();
+		PFCand_vertexChi2.clear();
+		PFCand_charge.clear();
+		PFCand_pvAssocQuality.clear();
+		PFCand_nTrackerLayers.clear();
+		PFCand_pixelhits.clear();
+		PFCand_status.clear();
+		PFCand_time.clear();
+		PFCand_trackHighPurity.clear();
+		PFCand_isElectron.clear();
+		PFCand_isMuon.clear();
+		PFCand_isChargedHadron.clear();
+		PFCand_fromPV.clear();
+		/*
 		NeutralPFCand_pt_rel.clear();
 		NeutralPFCand_eta_rel.clear();
 		NeutralPFCand_phi_rel.clear();
@@ -796,49 +851,56 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		NeutralPFCand_pdgId.clear();
 		NeutralPFCand_isPhoton.clear();
 		NeutralPFCand_isNeutralHadron.clear();
+		*/
+		
+		nChargePFCand = 0;
+		nNeutralPFCand = 0;
 		
 		for(unsigned ipf=0; ipf<pfcandidates.size(); ipf++){
 			
-			if(abs(pfcandidates[ipf].charge)>0){
+		//	if(abs(pfcandidates[ipf].charge)>0){
 				
-				if(pfcandidates[ipf].hasTrackDetails){
+		//		if(pfcandidates[ipf].hasTrackDetails){
 			
-				ChargePFCand_pt_rel.push_back(pfcandidates[ipf].pt/lepton_pt);
-				ChargePFCand_eta_rel.push_back(pfcandidates[ipf].eta - lepton_eta);
-				ChargePFCand_phi_rel.push_back(PhiInRange(pfcandidates[ipf].phi - lepton_phi));
-				ChargePFCand_phiAtVtx_rel.push_back(PhiInRange(pfcandidates[ipf].phiAtVtx - lepton_phi));
-				ChargePFCand_deltaR.push_back(delta2R(pfcandidates[ipf].eta,pfcandidates[ipf].phi,lepton_eta,lepton_phi));
-				ChargePFCand_puppiWeight.push_back(pfcandidates[ipf].puppiWeight);
-				ChargePFCand_puppiWeightNoLep.push_back(pfcandidates[ipf].puppiWeightNoLep);
-				ChargePFCand_caloFraction.push_back(pfcandidates[ipf].caloFraction);
-				ChargePFCand_hcalFraction.push_back(pfcandidates[ipf].hcalFraction);
-				ChargePFCand_hcalFractionCalib.push_back(pfcandidates[ipf].hcalFractionCalib);
-				ChargePFCand_pdgId.push_back(pfcandidates[ipf].pdgId);
+			PFCand_pt_rel.push_back(pfcandidates[ipf].pt/lepton_pt);
+			PFCand_eta_rel.push_back(pfcandidates[ipf].eta - lepton_eta);
+			PFCand_phi_rel.push_back(PhiInRange(pfcandidates[ipf].phi - lepton_phi));
+			PFCand_phiAtVtx_rel.push_back(PhiInRange(pfcandidates[ipf].phiAtVtx - lepton_phi));
+			PFCand_deltaR.push_back(delta2R(pfcandidates[ipf].eta,pfcandidates[ipf].phi,lepton_eta,lepton_phi));
+			PFCand_puppiWeight.push_back(pfcandidates[ipf].puppiWeight);
+			PFCand_puppiWeightNoLep.push_back(pfcandidates[ipf].puppiWeightNoLep);
+			PFCand_caloFraction.push_back(pfcandidates[ipf].caloFraction);
+			PFCand_hcalFraction.push_back(pfcandidates[ipf].hcalFraction);
+			PFCand_hcalFractionCalib.push_back(pfcandidates[ipf].hcalFractionCalib);
+			PFCand_pdgId.push_back(pfcandidates[ipf].pdgId);
   
-				ChargePFCand_dz.push_back(pfcandidates[ipf].dz);
-				ChargePFCand_dzError.push_back(pfcandidates[ipf].dzError);
-				ChargePFCand_dzSig.push_back(pfcandidates[ipf].dz*1./pfcandidates[ipf].dzError);
-				ChargePFCand_dxy.push_back(pfcandidates[ipf].dxy);
-				ChargePFCand_dxyError.push_back(pfcandidates[ipf].dxyError);
-				ChargePFCand_dxySig.push_back(pfcandidates[ipf].dxy*1./pfcandidates[ipf].dxyError);
-				ChargePFCand_trkChi2.push_back(pfcandidates[ipf].trkChi2);
-				ChargePFCand_vertexChi2.push_back(pfcandidates[ipf].vertexChi2);
-				ChargePFCand_charge.push_back(pfcandidates[ipf].charge);
-				ChargePFCand_lostInnerHits.push_back(pfcandidates[ipf].lostInnerHits);
-				ChargePFCand_pvAssocQuality.push_back(pfcandidates[ipf].pvAssocQuality);
-				ChargePFCand_trkQuality.push_back(pfcandidates[ipf].trkQuality);
-				ChargePFCand_nTrackerLayers.push_back(pfcandidates[ipf].nTrackerLayers);
-				ChargePFCand_pixelhits.push_back(pfcandidates[ipf].pixelhits);
-				ChargePFCand_status.push_back(pfcandidates[ipf].status);
-				ChargePFCand_time.push_back(pfcandidates[ipf].time);
-				ChargePFCand_trackHighPurity.push_back(pfcandidates[ipf].trackHighPurity);
-				ChargePFCand_isElectron.push_back(pfcandidates[ipf].isElectron);
-				ChargePFCand_isMuon.push_back(pfcandidates[ipf].isMuon);
-				ChargePFCand_isChargedHadron.push_back(pfcandidates[ipf].isChargedHadron);
-				ChargePFCand_fromPV.push_back(pfcandidates[ipf].fromPV);
-				}
-			}
+			PFCand_dz.push_back(pfcandidates[ipf].dz);
+			PFCand_dzError.push_back(pfcandidates[ipf].dzError);
+			PFCand_dzSig.push_back(pfcandidates[ipf].dzSig);
+			PFCand_dxy.push_back(pfcandidates[ipf].dxy);
+			PFCand_dxyError.push_back(pfcandidates[ipf].dxyError);
+			PFCand_dxySig.push_back(pfcandidates[ipf].dxySig);
+			PFCand_trkChi2.push_back(pfcandidates[ipf].trkChi2);
+			PFCand_vertexChi2.push_back(pfcandidates[ipf].vertexChi2);
+			PFCand_charge.push_back(pfcandidates[ipf].charge);
+			PFCand_lostInnerHits.push_back(pfcandidates[ipf].lostInnerHits);
+			PFCand_pvAssocQuality.push_back(pfcandidates[ipf].pvAssocQuality);
+			PFCand_nTrackerLayers.push_back(pfcandidates[ipf].nTrackerLayers);
+			PFCand_pixelhits.push_back(pfcandidates[ipf].pixelhits);
+			PFCand_status.push_back(pfcandidates[ipf].status);
+			PFCand_time.push_back(pfcandidates[ipf].time);
+			PFCand_trackHighPurity.push_back(pfcandidates[ipf].trackHighPurity);
+			PFCand_isElectron.push_back(pfcandidates[ipf].isElectron);
+			PFCand_isMuon.push_back(pfcandidates[ipf].isMuon);
+			PFCand_isChargedHadron.push_back(pfcandidates[ipf].isChargedHadron);
+			PFCand_fromPV.push_back(pfcandidates[ipf].fromPV);
+			//	}
+			//}
 			
+			if(abs(pfcandidates[ipf].charge)>0){ nChargePFCand++; }
+			else { nNeutralPFCand++; }
+			
+			/*
 			else{
 			
 				NeutralPFCand_pt_rel.push_back(pfcandidates[ipf].pt/lepton_pt);
@@ -856,11 +918,10 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 				NeutralPFCand_isNeutralHadron.push_back(pfcandidates[ipf].isNeutralHadron);
 				
 			}
+			*/ 
   
-		}
+		}//ipf
 		
-		nChargePFCand = (int)ChargePFCand_pt_rel.size();
-		nNeutralPFCand = (int)NeutralPFCand_pt_rel.size();
 		
 		// secondary vertices within dR=0.5 //
 		
@@ -878,7 +939,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 			const auto &sv = (*secondaryVertices)[isv];                                                                                                           
 			reco::TrackBase::Point svpoint(sv.vx(),sv.vy(),sv.vz());
 	
-			float dRmax = 0.5;
+			float dRmax = DR_SV_Maximum;
 		
 			if(delta2R(leptons[ilep].eta,leptons[ilep].phi,sv.eta(),sv.phi())<dRmax){
 			
@@ -909,7 +970,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 				SV_pAngle.push_back(acos(pdotv));
 				SV_cospAngle.push_back(pdotv);
 		
-				if (++nSV>=nconsmax) break;
+				if (++nSV>=nsvmax) break;
 				  
 			} // DR condition
 			
@@ -917,7 +978,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		
 		// nearest jet //
 		
-		float dR_lj_min = 0.4;
+		float dR_lj_min = DR_AK4Jet_Maximum;
 		int i_nearjet = -1;
 		
 		for(int ijet=0; ijet<nPFJetAK4; ijet++){
