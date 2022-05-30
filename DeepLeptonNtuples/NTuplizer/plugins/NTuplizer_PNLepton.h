@@ -722,12 +722,13 @@ private:
   
   //basic kinematic variables //
   float lepton_pt, lepton_eta, lepton_phi, lepton_mass, lepton_p;
-  int lepton_pdgId, lepton_charge, lepton_tightcharge;
+  int lepton_pdgId;
+  float lepton_charge, lepton_tightcharge;
   //distance from PV & SV//
-  float lepton_dxy, lepton_dxyError, lepton_dz, lepton_dzError, lepton_ip3d, lepton_sip3d, lepton_dxy_sv;
+  float lepton_dxy, lepton_dxyError, lepton_dxySig, lepton_dz, lepton_dzError, lepton_dzSig, lepton_ip3d, lepton_sip3d, lepton_dxy_sv;
   //Track information //
   float lepton_chi2,  Lepton_valfrac;
-  int lepton_ndof, lepton_trkKink, lepton_hit, lepton_pixhit, lepton_nTrackerLayers, lepton_lostHits;
+  float lepton_ndof, lepton_trkKink, lepton_hit, lepton_pixhit, lepton_nTrackerLayers, lepton_lostHits;
   //Energy information //
   float lepton_e_ECAL, lepton_e_HCAL, lepton_hoe;
   //Mini-isolation variables //
@@ -769,10 +770,10 @@ private:
   float lepton_posmatch, lepton_segmentComp;
   int lepton_nStations;
   // ID booleans //
-  bool lepton_isPFCand, lepton_isGlobal, lepton_isTracker;
-  bool lepton_isGoodGlobal, lepton_isTight, lepton_isHighPt, lepton_isHighPttrk, lepton_isMedium, lepton_isMedPr, lepton_isLoose;
+  float lepton_isPFCand, lepton_isGlobal, lepton_isTracker;
+  float lepton_isGoodGlobal, lepton_isTight, lepton_isHighPt, lepton_isHighPttrk, lepton_isMedium, lepton_isMedPr, lepton_isLoose;
   
-  float lepton_jetPtRelv2, lepton_jetRelIso, lepton_jetbtag;
+  float lepton_jetPtRelv2, lepton_jetPtRelv2_log, lepton_jetRelIso, lepton_jetbtag;
   
   int label_Muon_Prompt, label_Muon_fromTau, label_Muon_fromHFHadron, label_Muon_fromLFHadron, label_Muon_fromPhoton, label_Muon_unknown, label_Muon_fromPhotonORunknown;
   int label_Electron_Prompt, label_Electron_fromTau, label_Electron_fromHFHadron, label_Electron_fromLFHadron, label_Electron_fromPhoton, label_Electron_unknown, label_Electron_fromPhotonORunknown;
@@ -799,6 +800,7 @@ private:
   
   int nChargePFCand;
   vector<float> PFCand_pt_rel;
+  vector<float> PFCand_pt_rel_log;
   vector<float> PFCand_eta_rel;
   vector<float> PFCand_phi_rel;
   vector<float> PFCand_phiAtVtx_rel;
@@ -808,7 +810,8 @@ private:
   vector<float> PFCand_caloFraction;
   vector<float> PFCand_hcalFraction;
   vector<float> PFCand_hcalFractionCalib;
-  vector<int> PFCand_pdgId;
+  vector<float> PFCand_pdgId;
+  vector<float> PFCand_energy_log;
   
   vector<float> PFCand_dz;
   vector<float> PFCand_dzError;
@@ -818,18 +821,18 @@ private:
   vector<float> PFCand_dxySig;
   vector<float> PFCand_trkChi2;
   vector<float> PFCand_vertexChi2;
-  vector<int> PFCand_charge;
-  vector<int> PFCand_lostInnerHits;
+  vector<float> PFCand_charge;
+  vector<float> PFCand_lostInnerHits;
   vector<float> PFCand_pvAssocQuality;
-  vector<int> PFCand_nTrackerLayers;
-  vector<int> PFCand_pixelhits;
+  vector<float> PFCand_nTrackerLayers;
+  vector<float> PFCand_pixelhits;
   vector<float> PFCand_status;
-  vector<float> PFCand_time;
-  vector<bool> PFCand_trackHighPurity;
-  vector<bool> PFCand_isElectron;
-  vector<bool> PFCand_isMuon;
-  vector<bool> PFCand_isChargedHadron;
-  vector<bool> PFCand_fromPV;
+  //vector<float> PFCand_time;
+  vector<float> PFCand_trackHighPurity;
+  vector<float> PFCand_isElectron;
+  vector<float> PFCand_isMuon;
+  vector<float> PFCand_isChargedHadron;
+  vector<float> PFCand_fromPV;
   
   int nNeutralPFCand;
   /*
@@ -850,13 +853,14 @@ private:
   // secondary vertices //
   int nSV;
   vector<float> SV_pt_rel;
+  vector<float> SV_pt_rel_log;
   vector<float> SV_eta_rel;
   vector<float> SV_phi_rel;
   vector<float> SV_deltaR;
   vector<float> SV_mass;
   vector<float> SV_chi2;
-  vector<int> SV_ntracks;
-  vector<int> SV_ndof;
+  vector<float> SV_ntracks;
+  vector<float> SV_ndof;
   vector<float> SV_dxy;
   vector<float> SV_dxyError;
   vector<float> SV_dxySig;
@@ -1063,8 +1067,8 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   T1->Branch("lepton_phi", &lepton_phi,"lepton_phi/F");
   T1->Branch("lepton_mass", &lepton_mass,"lepton_mass/F");
   
-  T1->Branch("lepton_charge", &lepton_charge,"lepton_charge/I");
-  T1->Branch("lepton_tightcharge", &lepton_tightcharge,"lepton_tightcharge/I");
+  T1->Branch("lepton_charge", &lepton_charge,"lepton_charge/F");
+  T1->Branch("lepton_tightcharge", &lepton_tightcharge,"lepton_tightcharge/F");
   T1->Branch("lepton_pdgId", &lepton_pdgId,"lepton_pdgId/I");
   
   // common distance from PV & SV //
@@ -1073,6 +1077,8 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   T1->Branch("lepton_dz", &lepton_dz,"lepton_dz/F");
   T1->Branch("lepton_dxyError", &lepton_dxyError,"lepton_dxyError/F");
   T1->Branch("lepton_dzError", &lepton_dzError,"lepton_dzError/F");
+  T1->Branch("lepton_dxySig", &lepton_dxySig,"lepton_dxySig/F");
+  T1->Branch("lepton_dzSig", &lepton_dzSig,"lepton_dzSig/F");
   T1->Branch("lepton_ip3d", &lepton_ip3d,"lepton_ip3d/F");
   T1->Branch("lepton_sip3d", &lepton_sip3d,"lepton_sip3d/F");
   T1->Branch("lepton_dxy_sv", &lepton_dxy_sv,"lepton_dxy_sv/F");
@@ -1084,12 +1090,11 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   // common Track information //
   
   T1->Branch("lepton_chi2", &lepton_chi2,"lepton_chi2/F");
-  T1->Branch("lepton_ndof", &lepton_ndof,"lepton_ndof/I");
-  T1->Branch("lepton_trkKink", &lepton_trkKink,"lepton_trkKink/F");
-  T1->Branch("lepton_hit", &lepton_hit,"lepton_hit/I");
-  T1->Branch("lepton_pixhit", &lepton_pixhit,"lepton_pixhit/I");
-  T1->Branch("lepton_nTrackerLayers", &lepton_nTrackerLayers,"lepton_nTrackerLayers/I"); 
-  T1->Branch("lepton_lostHits", &lepton_lostHits,"lepton_lostHits/I");
+  T1->Branch("lepton_ndof", &lepton_ndof,"lepton_ndof/F");
+  T1->Branch("lepton_hit", &lepton_hit,"lepton_hit/F");
+  T1->Branch("lepton_pixhit", &lepton_pixhit,"lepton_pixhit/F");
+  T1->Branch("lepton_nTrackerLayers", &lepton_nTrackerLayers,"lepton_nTrackerLayers/F"); 
+  T1->Branch("lepton_lostHits", &lepton_lostHits,"lepton_lostHits/F");
   
   // common calorimeter energy info //
   
@@ -1113,79 +1118,88 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   T1->Branch("lepton_pfRelIso03_PileUp", &lepton_pfRelIso03_PileUp,"lepton_pfRelIso03_PileUp/F");
   T1->Branch("lepton_tkRelIso", &lepton_tkRelIso,"lepton_tkRelIso/F");
   
-  // Muon-specfic variables //
+  if(save_only_muons && !save_only_electrons){
   
-  T1->Branch("lepton_nStations", &lepton_nStations,"lepton_nStations/I");
-  T1->Branch("lepton_segmentComp", &lepton_segmentComp,"lepton_segmentComp/F");
+	// Muon-specfic variables //
   
-  // Muon ID booleans //
+	T1->Branch("lepton_trkKink", &lepton_trkKink,"lepton_trkKink/F");
+	T1->Branch("lepton_nStations", &lepton_nStations,"lepton_nStations/I");
+	T1->Branch("lepton_segmentComp", &lepton_segmentComp,"lepton_segmentComp/F");
+	T1->Branch("lepton_posmatch", &lepton_posmatch,"lepton_posmatch/F");
   
-  T1->Branch("lepton_isPFCand", &lepton_isPFCand,"lepton_isPFCand/O");
-  T1->Branch("lepton_isGlobal", &lepton_isGlobal,"lepton_isGlobal/O");
-  T1->Branch("lepton_isTracker", &lepton_isTracker,"lepton_isTracker/O");
-  T1->Branch("lepton_isLoose", &lepton_isLoose,"lepton_isLoose/O");
-  T1->Branch("lepton_isGoodGlobal", &lepton_isGoodGlobal,"lepton_isGoodGlobal/O");
-  T1->Branch("lepton_isMedium", &lepton_isMedium,"lepton_isMedium/O");
-  T1->Branch("lepton_isMedPr", &lepton_isMedPr,"lepton_isMedPr/O");
-  T1->Branch("lepton_isTight", &lepton_isTight,"lepton_isTight/O");
-  T1->Branch("lepton_isHighPt", &lepton_isHighPt,"lepton_isHighPt/O"); 
-  T1->Branch("lepton_isHighPttrk", &lepton_isHighPttrk,"lepton_isHighPttrk/O");
+	// Muon ID booleans //
   
-  T1->Branch("lepton_posmatch", &lepton_posmatch,"lepton_posmatch/F");
+	T1->Branch("lepton_isPFCand", &lepton_isPFCand,"lepton_isPFCand/F");
+	T1->Branch("lepton_isGlobal", &lepton_isGlobal,"lepton_isGlobal/F");
+	T1->Branch("lepton_isTracker", &lepton_isTracker,"lepton_isTracker/F");
+	T1->Branch("lepton_isLoose", &lepton_isLoose,"lepton_isLoose/F");
+	T1->Branch("lepton_isGoodGlobal", &lepton_isGoodGlobal,"lepton_isGoodGlobal/F");
+	T1->Branch("lepton_isMedium", &lepton_isMedium,"lepton_isMedium/F");
+	T1->Branch("lepton_isMedPr", &lepton_isMedPr,"lepton_isMedPr/F");
+	T1->Branch("lepton_isTight", &lepton_isTight,"lepton_isTight/F");
+	T1->Branch("lepton_isHighPt", &lepton_isHighPt,"lepton_isHighPt/F"); 
+	T1->Branch("lepton_isHighPttrk", &lepton_isHighPttrk,"lepton_isHighPttrk/F");
   
-  // Electron ID booleans //
+  }
   
-  T1->Branch("lepton_mvaid_Fallv2WP90", &lepton_mvaid_Fallv2WP90,"lepton_mvaid_Fallv2WP90/O");
-  T1->Branch("lepton_mvaid_Fallv2WP90_noIso", &lepton_mvaid_Fallv2WP90_noIso,"lepton_mvaid_Fallv2WP90_noIso/O");
-  T1->Branch("lepton_mvaid_Fallv2WP80", &lepton_mvaid_Fallv2WP80,"lepton_mvaid_Fallv2WP80/O");
-  T1->Branch("lepton_mvaid_Fallv2WP80_noIso", &lepton_mvaid_Fallv2WP80_noIso,"lepton_mvaid_Fallv2WP80_noIso/O");
+  if(!save_only_muons && save_only_electrons){
   
-  // Electron energy cluster shapes //
+	// Electron ID booleans //
   
-  T1->Branch("lepton_eoverp", &lepton_eoverp,"lepton_eoverp/F");
+	T1->Branch("lepton_mvaid_Fallv2WP90", &lepton_mvaid_Fallv2WP90,"lepton_mvaid_Fallv2WP90/O");
+	T1->Branch("lepton_mvaid_Fallv2WP90_noIso", &lepton_mvaid_Fallv2WP90_noIso,"lepton_mvaid_Fallv2WP90_noIso/O");
+	T1->Branch("lepton_mvaid_Fallv2WP80", &lepton_mvaid_Fallv2WP80,"lepton_mvaid_Fallv2WP80/O");
+	T1->Branch("lepton_mvaid_Fallv2WP80_noIso", &lepton_mvaid_Fallv2WP80_noIso,"lepton_mvaid_Fallv2WP80_noIso/O");
   
-  // Electron-specific isolation variables //
+	// Electron energy cluster shapes //
+  
+	T1->Branch("lepton_eoverp", &lepton_eoverp,"lepton_eoverp/F");
+  
+	// Electron-specific isolation variables //
  
-  T1->Branch("lepton_pfRelIso03_eacor", &lepton_pfRelIso03_eacor,"lepton_pfRelIso03_eacor/F");
-  T1->Branch("lepton_pfReliso04_eacor", &lepton_pfRelIso04_eacor,"lepton_pfRelIso04_eacor/F");
+	T1->Branch("lepton_pfRelIso03_eacor", &lepton_pfRelIso03_eacor,"lepton_pfRelIso03_eacor/F");
+	T1->Branch("lepton_pfReliso04_eacor", &lepton_pfRelIso04_eacor,"lepton_pfRelIso04_eacor/F");
   
-  T1->Branch("lepton_dr03EcalRecHitSumEt_Rel", &lepton_dr03EcalRecHitSumEt_Rel,"lepton_dr03EcalRecHitSumEt_Rel/F");
-  T1->Branch("lepton_dr03HcalDepth1TowerSumEt_Rel", &lepton_dr03HcalDepth1TowerSumEt_Rel,"lepton_dr03HcalDepth1TowerSumEt_Rel/F");
-  T1->Branch("lepton_dr03HcalDepth2TowerSumEt_Rel", &lepton_dr03HcalDepth2TowerSumEt_Rel,"lepton_dr03HcalDepth2TowerSumEt_Rel/F");
-  T1->Branch("lepton_dr03TkSumPt_Rel", &lepton_dr03TkSumPt_Rel,"lepton_dr03TkSumPt_Rel/F");
-  T1->Branch("lepton_dr03TkSumPtHEEP_Rel", &lepton_dr03TkSumPtHEEP_Rel,"lepton_dr03TkSumPtHEEP_Rel/F");
+	T1->Branch("lepton_dr03EcalRecHitSumEt_Rel", &lepton_dr03EcalRecHitSumEt_Rel,"lepton_dr03EcalRecHitSumEt_Rel/F");
+	T1->Branch("lepton_dr03HcalDepth1TowerSumEt_Rel", &lepton_dr03HcalDepth1TowerSumEt_Rel,"lepton_dr03HcalDepth1TowerSumEt_Rel/F");
+	T1->Branch("lepton_dr03HcalDepth2TowerSumEt_Rel", &lepton_dr03HcalDepth2TowerSumEt_Rel,"lepton_dr03HcalDepth2TowerSumEt_Rel/F");
+	T1->Branch("lepton_dr03TkSumPt_Rel", &lepton_dr03TkSumPt_Rel,"lepton_dr03TkSumPt_Rel/F");
+	T1->Branch("lepton_dr03TkSumPtHEEP_Rel", &lepton_dr03TkSumPtHEEP_Rel,"lepton_dr03TkSumPtHEEP_Rel/F");
   
-  // Electron supercluster information //
+	// Electron supercluster information //
   
-  T1->Branch("lepton_eInvMinusPInv", &lepton_eInvMinusPInv,"lepton_eInvMinusPInv/F");
-  T1->Branch("lepton_supcl_eta", &lepton_supcl_eta,"lepton_supcl_eta/F");
-  T1->Branch("lepton_supcl_phi", &lepton_supcl_phi,"lepton_supcl_phi/F");
-  T1->Branch("lepton_supcl_energy", &lepton_supcl_energy,"lepton_supcl_energy/F");
-  T1->Branch("lepton_sigmaietaieta", &lepton_sigmaietaieta, "lepton_sigmaietaieta/F");
-  T1->Branch("lepton_sigmaiphiiphi", &lepton_sigmaiphiiphi, "lepton_sigmaiphiiphi/F");
-  T1->Branch("lepton_r9full", &lepton_r9full, "lepton_r9full/F");
+	T1->Branch("lepton_eInvMinusPInv", &lepton_eInvMinusPInv,"lepton_eInvMinusPInv/F");
+	T1->Branch("lepton_supcl_eta", &lepton_supcl_eta,"lepton_supcl_eta/F");
+	T1->Branch("lepton_supcl_phi", &lepton_supcl_phi,"lepton_supcl_phi/F");
+	T1->Branch("lepton_supcl_energy", &lepton_supcl_energy,"lepton_supcl_energy/F");
+	T1->Branch("lepton_sigmaietaieta", &lepton_sigmaietaieta, "lepton_sigmaietaieta/F");
+	T1->Branch("lepton_sigmaiphiiphi", &lepton_sigmaiphiiphi, "lepton_sigmaiphiiphi/F");
+	T1->Branch("lepton_r9full", &lepton_r9full, "lepton_r9full/F");
   
-  T1->Branch("lepton_hcaloverecal", &lepton_hcaloverecal, "lepton_hcaloverecal/F");
-  T1->Branch("lepton_ecloverpout", &lepton_ecloverpout, "lepton_ecloverpout/F"); 
-  T1->Branch("lepton_convVeto", &lepton_convVeto, "lepton_convVeto/O");
+	T1->Branch("lepton_hcaloverecal", &lepton_hcaloverecal, "lepton_hcaloverecal/F");
+	T1->Branch("lepton_ecloverpout", &lepton_ecloverpout, "lepton_ecloverpout/F"); 
+	T1->Branch("lepton_convVeto", &lepton_convVeto, "lepton_convVeto/O");
 
-  T1->Branch("lepton_etain", &lepton_etain,"lepton_etain/F");
-  T1->Branch("lepton_phiin", &lepton_phiin,"lepton_phiin/F");
-  T1->Branch("lepton_fbrem", &lepton_fbrem,"lepton_fbrem/F");
-  T1->Branch("lepton_supcl_etaWidth", &lepton_supcl_etaWidth, "lepton_supcl_etaWidth/F");
-  T1->Branch("lepton_supcl_phiWidth", &lepton_supcl_phiWidth, "lepton_supcl_phiWidth/F");
+	T1->Branch("lepton_etain", &lepton_etain,"lepton_etain/F");
+	T1->Branch("lepton_phiin", &lepton_phiin,"lepton_phiin/F");
+	T1->Branch("lepton_fbrem", &lepton_fbrem,"lepton_fbrem/F");
+	T1->Branch("lepton_supcl_etaWidth", &lepton_supcl_etaWidth, "lepton_supcl_etaWidth/F");
+	T1->Branch("lepton_supcl_phiWidth", &lepton_supcl_phiWidth, "lepton_supcl_phiWidth/F");
   
-  T1->Branch("lepton_e1x5bye5x5", &lepton_e1x5bye5x5, "lepton_e1x5bye5x5/F");
-  T1->Branch("lepton_convtxprob", &lepton_convtxprob, "lepton_convtxprob/F");
-  T1->Branch("lepton_deltaetacltrkcalo", &lepton_deltaetacltrkcalo, "lepton_deltaetacltrkcalo/F");
-  T1->Branch("lepton_supcl_preshvsrawe", &lepton_supcl_preshvsrawe, "lepton_supcl_preshvsrawe/F");
+	T1->Branch("lepton_e1x5bye5x5", &lepton_e1x5bye5x5, "lepton_e1x5bye5x5/F");
+	T1->Branch("lepton_convtxprob", &lepton_convtxprob, "lepton_convtxprob/F");
+	T1->Branch("lepton_deltaetacltrkcalo", &lepton_deltaetacltrkcalo, "lepton_deltaetacltrkcalo/F");
+	T1->Branch("lepton_supcl_preshvsrawe", &lepton_supcl_preshvsrawe, "lepton_supcl_preshvsrawe/F");
   
-  T1->Branch("lepton_closeTrackNLayers", &lepton_closeTrackNLayers, "lepton_closeTrackNLayers/I");
-  T1->Branch("lepton_closeTrackNormChi2", &lepton_closeTrackNormChi2, "lepton_closeTrackNormChi2/F");
+	T1->Branch("lepton_closeTrackNLayers", &lepton_closeTrackNLayers, "lepton_closeTrackNLayers/I");
+	T1->Branch("lepton_closeTrackNormChi2", &lepton_closeTrackNormChi2, "lepton_closeTrackNormChi2/F");
+  
+  }
   
   // Nearest jet features //
   
-  T1->Branch("lepton_jetPtRelv2", &lepton_jetPtRelv2, "lepton_closeTrackNLayers/F");
+  T1->Branch("lepton_jetPtRelv2", &lepton_jetPtRelv2, "lepton_jetPtRelv2/F");
+  T1->Branch("lepton_jetPtRelv2_log", &lepton_jetPtRelv2_log, "lepton_jetPtRelv2_log/F");
   T1->Branch("lepton_jetRelIso", &lepton_jetRelIso, "lepton_jetRelIso/F");
   T1->Branch("lepton_jetbtag", &lepton_jetbtag, "lepton_jetbtag/F");
   
@@ -1194,6 +1208,7 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   T1->Branch("nPFCand",&nPFCand,"nPFCand/I");
   
   T1->Branch("PFCand_pt_rel",&PFCand_pt_rel);
+  T1->Branch("PFCand_pt_rel_log",&PFCand_pt_rel_log);
   T1->Branch("PFCand_eta_rel",&PFCand_eta_rel);
   T1->Branch("PFCand_phi_rel",&PFCand_phi_rel);
   T1->Branch("PFCand_phiAtVtx_rel",&PFCand_phiAtVtx_rel);
@@ -1205,6 +1220,7 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   T1->Branch("PFCand_hcalFractionCalib",&PFCand_hcalFractionCalib);
   T1->Branch("PFCand_puppiWeight",&PFCand_puppiWeight);
   T1->Branch("PFCand_puppiWeightNoLep",&PFCand_puppiWeightNoLep);
+  T1->Branch("PFCand_energy_log",&PFCand_energy_log);
   
   T1->Branch("PFCand_dz",&PFCand_dz);
   T1->Branch("PFCand_dzError",&PFCand_dzError);
@@ -1246,6 +1262,7 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   
   T1->Branch("nSV",&nSV,"nSV/I");
   T1->Branch("SV_pt_rel",&SV_pt_rel);
+  T1->Branch("SV_pt_rel_log",&SV_pt_rel_log);
   T1->Branch("SV_mass",&SV_mass);
   T1->Branch("SV_eta_rel",&SV_eta_rel);
   T1->Branch("SV_phi_rel",&SV_phi_rel);

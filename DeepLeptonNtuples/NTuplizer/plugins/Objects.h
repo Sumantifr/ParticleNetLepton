@@ -51,6 +51,8 @@ class Lepton{
 		float dxyError;
 		float dz;
 		float dzError;
+		float dxySig;
+		float dzSig;
 		float ip3d;
 		float sip3d;
 		float dxy_sv;
@@ -165,6 +167,8 @@ void Initialize(Lepton &lepton){
 	lepton.dz = 0;
 	lepton.dxyError = 0;
 	lepton.dzError = 0;
+	lepton.dxySig = 0;
+	lepton.dzSig = 0;
 	lepton.ip3d = 0;
 	lepton.sip3d = 0;
 	lepton.dxy_sv = 0;

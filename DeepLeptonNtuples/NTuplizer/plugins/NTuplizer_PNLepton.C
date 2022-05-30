@@ -210,284 +210,297 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
     
   nLepton = 0; 
   
-  vector<Lepton> leptons;      
+  vector<Lepton> leptons;    
+  
+  if(save_only_muons){  
                                                                                                                                    
-  if(muons.isValid() && muons->size()>0) {                                                                                                           
+	if(muons.isValid() && muons->size()>0) {                                                                                                           
     
-	edm::View<pat::Muon>::const_iterator muon1;                                                                                                      
+		edm::View<pat::Muon>::const_iterator muon1;                                                                                                      
 
-    for( muon1 = muons->begin(); muon1 < muons->end(); muon1++ ) {                                                                                   
+		for( muon1 = muons->begin(); muon1 < muons->end(); muon1++ ) {                                                                                   
 
-		if (StoreMuon(*muon1,minmuPt,maxEta)) {
+			if (StoreMuon(*muon1,minmuPt,maxEta)) {
 			
-			Lepton lepton;  
-			Initialize(lepton);                                                              
+				Lepton lepton;  
+				Initialize(lepton);                                                              
 			
-			TrackRef trktrk = muon1->innerTrack();   
+				TrackRef trktrk = muon1->innerTrack();   
 			
-			lepton.pt = muon1->pt();                                                                                                                                                                             
-			lepton.p = trktrk->p();                                                                                                          
-			lepton.eta = muon1->eta();                                                                                                              
-			lepton.phi = muon1->phi();  
-			lepton.mass = muon1->mass();  
-			lepton.charge = muon1->charge();                                                                                                                                                                                                                          
-            lepton.pdgId = muon1->pdgId();
-            lepton.tightcharge = (muon1->muonBestTrack()->ptError()/muon1->muonBestTrack()->pt() < 0.2)?2:0;
+				lepton.pt = muon1->pt();                                                                                                                                                                             
+				lepton.p = trktrk->p();                                                                                                          
+				lepton.eta = muon1->eta();                                                                                                              
+				lepton.phi = muon1->phi();  
+				lepton.mass = muon1->mass();  
+				lepton.charge = muon1->charge();                                                                                                                                                                                                                          
+				lepton.pdgId = muon1->pdgId();
+				lepton.tightcharge = (muon1->muonBestTrack()->ptError()/muon1->muonBestTrack()->pt() < 0.2)?2:0;
                                                                                                                                                        
-			//MiniIsolation //     
+				//MiniIsolation //     
 			                                                                                 
-			vector<float> isovalues;
-			Read_MiniIsolation(muon1,Rho,isovalues);
-			lepton.minisoall = isovalues[0];
-			lepton.minchiso = isovalues[1];
-			lepton.minnhiso = isovalues[2];
-			lepton.minphiso = isovalues[3];
+				vector<float> isovalues;
+				Read_MiniIsolation(muon1,Rho,isovalues);
+				lepton.minisoall = isovalues[0];
+				lepton.minchiso = isovalues[1];
+				lepton.minnhiso = isovalues[2];
+				lepton.minphiso = isovalues[3];
 			                                         
-			// Basic id variables //    
+				// Basic id variables //    
 			                                  
-			lepton.isPFCand = muon1->isPFMuon();                                                                                                        
-			lepton.isGlobal = muon1->isGlobalMuon();                                                                                                    
-			lepton.isTracker = muon1->isTrackerMuon();                                                                                                  
-			lepton.isLoose = (muon::isLooseMuon(*muon1));                                                                                           
-			lepton.isMedium = (muon::isMediumMuon(*muon1));                                                                                            
-			lepton.isMedPr = false;                                                                          
-			if(muon::isMediumMuon(*muon1)) {                                                                                                             
-				if ((std::abs(muon1->muonBestTrack()->dz(PV_vertex.position())) < 0.1) && (std::abs(muon1->muonBestTrack()->dxy(PV_vertex.position())) < 0.02)){                                                                                                                  
-					lepton.isMedPr = true;                                                                                                              
-				}                                                                                                                                          
-			}                                                                                                                                      
-			lepton.isGoodGlobal = (muon1->isGlobalMuon() && muon1->globalTrack()->normalizedChi2() < 3 && muon1->combinedQuality().chi2LocalPosition < 12 && muon1->combinedQuality().trkKink < 20 && (muon::segmentCompatibility(*muon1)) > 0.303);                     
-			lepton.isTight = (muon::isTightMuon(*muon1,PV_vertex));                                                                                    
-			lepton.isHighPt = (muon::isHighPtMuon(*muon1,PV_vertex));                                                                                  
-			lepton.isHighPttrk = (muon::isTrackerHighPtMuon(*muon1,PV_vertex));   
+				lepton.isPFCand = muon1->isPFMuon();                                                                                                        
+				lepton.isGlobal = muon1->isGlobalMuon();                                                                                                    
+				lepton.isTracker = muon1->isTrackerMuon();                                                                                                  
+				lepton.isLoose = (muon::isLooseMuon(*muon1));                                                                                           
+				lepton.isMedium = (muon::isMediumMuon(*muon1));                                                                                            
+				lepton.isMedPr = false;                                                                          
+				if(muon::isMediumMuon(*muon1)) {                                                                                                             
+					if ((std::abs(muon1->muonBestTrack()->dz(PV_vertex.position())) < 0.1) && (std::abs(muon1->muonBestTrack()->dxy(PV_vertex.position())) < 0.02)){                                                                                                                  
+						lepton.isMedPr = true;                                                                                                              
+					}                                                                                                                                          
+				}                                                                                                                                      
+				lepton.isGoodGlobal = (muon1->isGlobalMuon() && muon1->globalTrack()->normalizedChi2() < 3 && muon1->combinedQuality().chi2LocalPosition < 12 && muon1->combinedQuality().trkKink < 20 && (muon::segmentCompatibility(*muon1)) > 0.303);                     
+				lepton.isTight = (muon::isTightMuon(*muon1,PV_vertex));                                                                                    
+				lepton.isHighPt = (muon::isHighPtMuon(*muon1,PV_vertex));                                                                                  
+				lepton.isHighPttrk = (muon::isTrackerHighPtMuon(*muon1,PV_vertex));   
 			
-			// Displacement //
+				// Displacement //
 			
-			lepton.dxy = muon1->muonBestTrack()->dxy(PV_vertex.position());                                                                         
-			lepton.dz = muon1->muonBestTrack()->dz(PV_vertex.position());  
-			lepton.dxyError = muon1->edB(pat::Muon::PV2D);   
-			lepton.dzError = muon1->edB(pat::Muon::PVDZ);   
-			lepton.ip3d =  muon1->dB(pat::Muon::PV3D);    
-			lepton.sip3d =  muon1->dB(pat::Muon::PV3D)/muon1->edB(pat::Muon::PV3D);     
+				lepton.dxy = muon1->muonBestTrack()->dxy(PV_vertex.position());                                                                         
+				lepton.dz = muon1->muonBestTrack()->dz(PV_vertex.position());  
+				lepton.dxyError = muon1->edB(pat::Muon::PV2D);   
+				lepton.dzError = muon1->edB(pat::Muon::PVDZ);   
+				lepton.dxySig = lepton.dxy*1./TMath::Max(float(1.e-6),float(lepton.dxyError));
+				lepton.dzSig = lepton.dz*1./TMath::Max(float(1.e-6),float(lepton.dzError));
+				lepton.ip3d =  muon1->dB(pat::Muon::PV3D);    
+				lepton.sip3d =  muon1->dB(pat::Muon::PV3D)/muon1->edB(pat::Muon::PV3D);     
 			
-			// Displacement w.r.t secondary vertex //
+				// Displacement w.r.t secondary vertex //
 			 
-			lepton.dxy_sv = DistanceFromSV_Muon(muon1->muonBestTrack(),secondaryVertices);  
+				lepton.dxy_sv = DistanceFromSV_Muon(muon1->muonBestTrack(),secondaryVertices);  
 			
-			// GEN particle matching //
+				// GEN particle matching //
 			
-			if(isMC){
-				lepton.genPartIdx  = getGenPartonIndex(lepton.eta,lepton.phi,GenPartons,13);
-				lepton.genPartFlav = getGenPartonFlavor(GenPartons,lepton.genPartIdx);
-			}else{
-				lepton.genPartIdx = -1;
-				lepton.genPartFlav = 0;
-			}
+				if(isMC){
+					lepton.genPartIdx  = getGenPartonIndex(lepton.eta,lepton.phi,GenPartons,13);
+					lepton.genPartFlav = getGenPartonFlavor(GenPartons,lepton.genPartIdx);
+				}else{
+					lepton.genPartIdx = -1;
+					lepton.genPartFlav = 0;
+				}
     
-			// Energy info //
+				// Energy info //
 			                                                   
-			lepton.e_ECAL = (muon1->calEnergy()).em * 1./muon1->energy();                                                                                                  
-			lepton.e_HCAL = (muon1->calEnergy()).had* 1./muon1->energy();
+				lepton.e_ECAL = (muon1->calEnergy()).em * 1./muon1->energy();                                                                                                  
+				lepton.e_HCAL = (muon1->calEnergy()).had* 1./muon1->energy();
+				lepton.hoe = lepton.e_HCAL*1./TMath::Max(float(1.e-6),float(lepton.e_ECAL));
 			
-			// Track info //
+				// Track info //
 			                                                                         
-			lepton.posmatch = muon1->combinedQuality().chi2LocalPosition;                                                                           
-			lepton.trkKink = muon1->combinedQuality().trkKink;                                                                                       
-			lepton.segmentComp = muon::segmentCompatibility(*muon1);                                                                                     
+				lepton.posmatch = muon1->combinedQuality().chi2LocalPosition;                                                                           
+				lepton.trkKink = muon1->combinedQuality().trkKink;                                                                                       
+				lepton.segmentComp = muon::segmentCompatibility(*muon1);                                                                                     
 			                                                                                                                                                                                                            
-			TrackRef trkglb =muon1->globalTrack();                                                                                                       
-			if ((!muon1->isGlobalMuon())) {                                                                                                              
-				if (muon1->isTrackerMuon()) {                                                                                                              
-					trkglb =muon1->innerTrack();                                                                                                             
-				} else {                                                                                                                                   
-					trkglb =muon1->outerTrack();                                                                                                             
-				}                                                                                                                                          
-			}
+				TrackRef trkglb =muon1->globalTrack();                                                                                                       
+				if ((!muon1->isGlobalMuon())) {                                                                                                              
+					if (muon1->isTrackerMuon()) {                                                                                                              
+						trkglb =muon1->innerTrack();                                                                                                             
+					} else {                                                                                                                                   
+						trkglb =muon1->outerTrack();                                                                                                             
+					}                                                                                                                                          
+				}
 			                                                                                                                                            
-			lepton.chi2 = trkglb->normalizedChi2();                                                                                                  
-			lepton.ndof = (int)trkglb->ndof();                                                                                                       
-			lepton.hit = (int)trkglb->hitPattern().numberOfValidMuonHits();                                                                              
-			lepton.nStations = (int)muon1->numberOfMatchedStations();                                                                                          
-			lepton.pixhit = (int)trktrk->hitPattern().numberOfValidPixelHits();                                                                          
-			lepton.nTrackerLayers = (int)trktrk->hitPattern().trackerLayersWithMeasurement();                                                                    
-			lepton.valfrac = trktrk->validFraction();   
-			lepton.lostHits = (int)trktrk->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS); 
+				lepton.chi2 = trkglb->normalizedChi2();                                                                                                  
+				lepton.ndof = (int)trkglb->ndof();                                                                                                       
+				lepton.hit = (int)trkglb->hitPattern().numberOfValidMuonHits();                                                                              
+				lepton.nStations = (int)muon1->numberOfMatchedStations();                                                                                          
+				lepton.pixhit = (int)trktrk->hitPattern().numberOfValidPixelHits();                                                                          
+				lepton.nTrackerLayers = (int)trktrk->hitPattern().trackerLayersWithMeasurement();                                                                    
+				lepton.valfrac = trktrk->validFraction();   
+				lepton.lostHits = (int)trktrk->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS); 
 			
-			// Isolation variables //
+				// Isolation variables //
 			                                                    
-			lepton.pfRelIso04_drcor = (muon1->pfIsolationR04().sumChargedHadronPt + max(0., muon1->pfIsolationR04().sumNeutralHadronEt + muon1->pfIsolationR04().sumPhotonEt - 0.5*muon1->pfIsolationR04().sumPUPt))/muon1->pt();                                               
-			lepton.pfRelIso04_ChargedHadron = muon1->pfIsolationR04().sumChargedHadronPt*1./muon1->pt();     
-			lepton.pfRelIso04_NeutralHadron = muon1->pfIsolationR04().sumNeutralHadronEt*1./muon1->pt();     
-			lepton.pfRelIso04_Photon = muon1->pfIsolationR04().sumPhotonEt*1./muon1->pt();     
-			lepton.pfRelIso04_PileUp = muon1->pfIsolationR04().sumPUPt*1./muon1->pt();   
+				lepton.pfRelIso04_drcor = (muon1->pfIsolationR04().sumChargedHadronPt + max(0., muon1->pfIsolationR04().sumNeutralHadronEt + muon1->pfIsolationR04().sumPhotonEt - 0.5*muon1->pfIsolationR04().sumPUPt))/muon1->pt();                                               
+				lepton.pfRelIso04_ChargedHadron = muon1->pfIsolationR04().sumChargedHadronPt*1./muon1->pt();     
+				lepton.pfRelIso04_NeutralHadron = muon1->pfIsolationR04().sumNeutralHadronEt*1./muon1->pt();     
+				lepton.pfRelIso04_Photon = muon1->pfIsolationR04().sumPhotonEt*1./muon1->pt();     
+				lepton.pfRelIso04_PileUp = muon1->pfIsolationR04().sumPUPt*1./muon1->pt();   
 			
-			lepton.pfRelIso03_drcor = (muon1->pfIsolationR03().sumChargedHadronPt + max(0., muon1->pfIsolationR03().sumNeutralHadronEt + muon1->pfIsolationR03().sumPhotonEt - 0.5*muon1->pfIsolationR03().sumPUPt))/muon1->pt();                                               
-			lepton.pfRelIso03_ChargedHadron = muon1->pfIsolationR03().sumChargedHadronPt*1./muon1->pt();     
-			lepton.pfRelIso03_NeutralHadron = muon1->pfIsolationR03().sumNeutralHadronEt*1./muon1->pt();     
-			lepton.pfRelIso03_Photon = muon1->pfIsolationR03().sumPhotonEt*1./muon1->pt();     
-			lepton.pfRelIso03_PileUp = muon1->pfIsolationR03().sumPUPt*1./muon1->pt();  
-			lepton.tkRelIso = muon1->isolationR03().sumPt/muon1->tunePMuonBestTrack()->pt();
+				lepton.pfRelIso03_drcor = (muon1->pfIsolationR03().sumChargedHadronPt + max(0., muon1->pfIsolationR03().sumNeutralHadronEt + muon1->pfIsolationR03().sumPhotonEt - 0.5*muon1->pfIsolationR03().sumPUPt))/muon1->pt();                                               
+				lepton.pfRelIso03_ChargedHadron = muon1->pfIsolationR03().sumChargedHadronPt*1./muon1->pt();     
+				lepton.pfRelIso03_NeutralHadron = muon1->pfIsolationR03().sumNeutralHadronEt*1./muon1->pt();     
+				lepton.pfRelIso03_Photon = muon1->pfIsolationR03().sumPhotonEt*1./muon1->pt();     
+				lepton.pfRelIso03_PileUp = muon1->pfIsolationR03().sumPUPt*1./muon1->pt();  
+				lepton.tkRelIso = muon1->isolationR03().sumPt/muon1->tunePMuonBestTrack()->pt();
 			
-			// store 4-vector to vector of leptons //
-			TLorentzVector p4;
-			p4.SetPtEtaPhiM(lepton.pt, lepton.eta, lepton.phi, lepton.mass);
-			tlep.push_back(p4);
+				// store 4-vector to vector of leptons //
+				TLorentzVector p4;
+				p4.SetPtEtaPhiM(lepton.pt, lepton.eta, lepton.phi, lepton.mass);
+				tlep.push_back(p4);
 			
-			// now push lepton to vector of leptons //
-			leptons.push_back(lepton);
+				// now push lepton to vector of leptons //
+				leptons.push_back(lepton);
 			
-			if (++nLepton>=njetmx) break;                                                                                                                 
+				if (++nLepton>=njetmx) break;                                                                                                                 
 		
-		}                                                                                                                                              
-      }                                                                                                                                               
-  }// muon loop 
+			}                                                                                                                                              
+		}                                                                                                                                               
+	}// muon loop 
+  }//save_only_muons
   
   // Electrons //
   
-  for(const auto& electron1 : iEvent.get(tok_electrons_) ) {                                                                                          
+  if(save_only_electrons){
+  
+	for(const auto& electron1 : iEvent.get(tok_electrons_) ) {                                                                                          
  
-    if (!StoreElectron(electron1,minePt,maxEta)) continue;
+		if (!StoreElectron(electron1,minePt,maxEta)) continue;
                     
-    Lepton lepton;
-    Initialize(lepton);                     
+		Lepton lepton;
+		Initialize(lepton);                     
                                                    
-	GsfTrackRef gsftrk1 = electron1.gsfTrack();   																														
-    TrackRef ctftrk = electron1.closestCtfTrackRef();    
+		GsfTrackRef gsftrk1 = electron1.gsfTrack();   																														
+		TrackRef ctftrk = electron1.closestCtfTrackRef();    
     
-    // Basic kinematic variables //
+		// Basic kinematic variables //
     
-    lepton.pt = electron1.pt();   	                                                                                 
-    lepton.eta = electron1.eta();                                                                                                                 
-    lepton.phi = electron1.phi();                                                                                                                 
-    lepton.mass = electron1.mass();                                                                                              
-    lepton.p = electron1.trackMomentumAtVtx().R();
-    lepton.charge = electron1.charge();     
-    lepton.pdgId = electron1.pdgId(); 
-    lepton.tightcharge = electron1.isGsfCtfScPixChargeConsistent() + electron1.isGsfScPixChargeConsistent();
+		lepton.pt = electron1.pt();   	                                                                                 
+		lepton.eta = electron1.eta();                                                                                                                 
+		lepton.phi = electron1.phi();                                                                                                                 
+		lepton.mass = electron1.mass();                                                                                              
+		lepton.p = electron1.trackMomentumAtVtx().R();
+		lepton.charge = electron1.charge();     
+		lepton.pdgId = electron1.pdgId(); 
+		lepton.tightcharge = electron1.isGsfCtfScPixChargeConsistent() + electron1.isGsfScPixChargeConsistent();
     
-    // Energy variables //
+		// Energy variables //
     
-    lepton.e_ECAL = electron1.ecalEnergy()*1./electron1.energy();   
-    lepton.e_HCAL = (1.-electron1.ecalEnergy())*1./electron1.energy();  
+		lepton.e_ECAL = electron1.ecalEnergy()*1./electron1.energy();   
+		lepton.e_HCAL = (1.-electron1.ecalEnergy())*1./electron1.energy();  
     
-    // MVA id //
+		// MVA id //
     
-    lepton.mvaid_Fallv2WP90 = electron1.electronID(melectronID_isowp90);                                                                                 
-    lepton.mvaid_Fallv2WP90_noIso = electron1.electronID(melectronID_noisowp90);                                                                             
-    lepton.mvaid_Fallv2WP80 = electron1.electronID(melectronID_isowp80);                                                                                 
-    lepton.mvaid_Fallv2WP80_noIso = electron1.electronID(melectronID_noisowp80);   
+		lepton.mvaid_Fallv2WP90 = electron1.electronID(melectronID_isowp90);                                                                                 
+		lepton.mvaid_Fallv2WP90_noIso = electron1.electronID(melectronID_noisowp90);                                                                             
+		lepton.mvaid_Fallv2WP80 = electron1.electronID(melectronID_isowp80);                                                                                 
+		lepton.mvaid_Fallv2WP80_noIso = electron1.electronID(melectronID_noisowp80);   
     
-    // displacement //
+		// displacement //
                                                                                  
-    lepton.dxy = gsftrk1->dxy(PV_vertex.position());  
-    lepton.dxyError = electron1.edB(pat::Electron::PV2D);                                                                                           
-    lepton.dz = gsftrk1->dz(PV_vertex.position()); 
-    lepton.dzError = electron1.edB(pat::Electron::PVDZ);    
-    lepton.ip3d =  electron1.dB(pat::Electron::PV3D); 
-    lepton.sip3d =  electron1.dB(pat::Electron::PV3D)/electron1.edB(pat::Electron::PV3D);    
+		lepton.dxy = gsftrk1->dxy(PV_vertex.position());  
+		lepton.dxyError = electron1.edB(pat::Electron::PV2D);                                                                                           
+		lepton.dz = gsftrk1->dz(PV_vertex.position()); 
+		lepton.dzError = electron1.edB(pat::Electron::PVDZ);  
+		lepton.dxySig = lepton.dxy*1./TMath::Max(float(1.e-6),float(lepton.dxyError));
+		lepton.dzSig = lepton.dz*1./TMath::Max(float(1.e-6),float(lepton.dzError));  
+		lepton.ip3d =  electron1.dB(pat::Electron::PV3D); 
+		lepton.sip3d =  electron1.dB(pat::Electron::PV3D)/electron1.edB(pat::Electron::PV3D);    
     
     
-    // Displacement w.r.t secondary vertex //
+		// Displacement w.r.t secondary vertex //
                                                                                                                                                 
-    lepton.dxy_sv = DistanceFromSV_Electron(gsftrk1,secondaryVertices);                                                                                          
+		lepton.dxy_sv = DistanceFromSV_Electron(gsftrk1,secondaryVertices);                                                                                          
     
-    // GEN particle matching //
+		// GEN particle matching //
   
-	if(isMC){
-		lepton.genPartIdx  = getGenPartonIndex(lepton.eta,lepton.phi,GenPartons,13);
-		lepton.genPartFlav = getGenPartonFlavor(GenPartons,lepton.genPartIdx);
-	}else{
-		lepton.genPartIdx = -1;
-		lepton.genPartFlav = 0;
-	}
+		if(isMC){
+			lepton.genPartIdx  = getGenPartonIndex(lepton.eta,lepton.phi,GenPartons,13);
+			lepton.genPartFlav = getGenPartonFlavor(GenPartons,lepton.genPartIdx);
+		}else{
+			lepton.genPartIdx = -1;
+			lepton.genPartFlav = 0;
+		}
       
-    // supercluste info //
+		// supercluste info //
     
-    lepton.supcl_energy = electron1.superCluster()->energy();  
-    lepton.supcl_eta = electron1.superCluster()->eta();                                                                                           
-    lepton.supcl_phi = electron1.superCluster()->phi();                                                                                           
+		lepton.supcl_energy = electron1.superCluster()->energy();  
+		lepton.supcl_eta = electron1.superCluster()->eta();                                                                                           
+		lepton.supcl_phi = electron1.superCluster()->phi();                                                                                           
     
-    // shape of energy deposition //             
+		// shape of energy deposition //             
                                                                                                                                                                                                                                               
-	lepton.sigmaietaieta = electron1.full5x5_sigmaIetaIeta();                                                                                         
-    lepton.sigmaiphiiphi = electron1.full5x5_sigmaIphiIphi();  
-    lepton.hcaloverecal = electron1.full5x5_hcalOverEcal();                                                                                         
-    lepton.r9full = electron1.full5x5_r9(); 
-    lepton.e1x5bye5x5 = 1.-electron1.full5x5_e1x5()/electron1.full5x5_e5x5();   
+		lepton.sigmaietaieta = electron1.full5x5_sigmaIetaIeta();                                                                                         
+		lepton.sigmaiphiiphi = electron1.full5x5_sigmaIphiIphi();  
+		lepton.hcaloverecal = electron1.full5x5_hcalOverEcal();                                                                                         
+		lepton.r9full = electron1.full5x5_r9(); 
+		lepton.e1x5bye5x5 = 1.-electron1.full5x5_e1x5()/electron1.full5x5_e5x5();   
                                                                                                                                                                                                                                                   
-    lepton.eoverp = 1./electron1.superCluster()->energy();                                                                                             
-    lepton.hoe = electron1.hadronicOverEm();                                                                                                   
-    lepton.ecloverpout = electron1.eEleClusterOverPout();  
-    lepton.convVeto = electron1.passConversionVeto();
+		lepton.eoverp = 1./electron1.superCluster()->energy();                                                                                             
+		lepton.hoe = electron1.hadronicOverEm();                                                                                                   
+		lepton.ecloverpout = electron1.eEleClusterOverPout();  
+		lepton.convVeto = electron1.passConversionVeto();
     
-    lepton.eInvMinusPInv =  (1-electron1.eSuperClusterOverP())/electron1.ecalEnergy(); // OR 1.0/(electron1.ecalEnergy())-1.0/(electron1.trackMomentumAtVtx().R())
-	lepton.etain = electron1.deltaEtaSuperClusterTrackAtVtx();                                                                                    
-	lepton.phiin = electron1.deltaPhiSuperClusterTrackAtVtx();                                                                                     
-	lepton.supcl_preshvsrawe = electron1.superCluster()->preshowerEnergy()/electron1.superCluster()->rawEnergy();                                                                                                                                            
-	lepton.supcl_etaWidth = electron1.superCluster()->etaWidth();                                                                                     
-	lepton.supcl_phiWidth = electron1.superCluster()->phiWidth(); 
-	lepton.deltaetacltrkcalo = electron1.deltaEtaSeedClusterTrackAtCalo();   
+		lepton.eInvMinusPInv =  (1-electron1.eSuperClusterOverP())/electron1.ecalEnergy(); // OR 1.0/(electron1.ecalEnergy())-1.0/(electron1.trackMomentumAtVtx().R())
+		lepton.etain = electron1.deltaEtaSuperClusterTrackAtVtx();                                                                                    
+		lepton.phiin = electron1.deltaPhiSuperClusterTrackAtVtx();                                                                                     
+		lepton.supcl_preshvsrawe = electron1.superCluster()->preshowerEnergy()/electron1.superCluster()->rawEnergy();                                                                                                                                            
+		lepton.supcl_etaWidth = electron1.superCluster()->etaWidth();                                                                                     
+		lepton.supcl_phiWidth = electron1.superCluster()->phiWidth(); 
+		lepton.deltaetacltrkcalo = electron1.deltaEtaSeedClusterTrackAtCalo();   
 	                                                                                                        
-	lepton.convtxprob = electron1.convVtxFitProb();   
-	lepton.fbrem = electron1.fbrem();                         
+		lepton.convtxprob = electron1.convVtxFitProb();   
+		lepton.fbrem = electron1.fbrem();                         
 	                                                                 
-    // isolation variables //                              
+		// isolation variables //                              
                                                                                                                                                                                        
-    const reco::GsfElectron::PflowIsolationVariables& pfIso = electron1.pfIsolationVariables();  
-    lepton.pfRelIso03_ChargedHadron = pfIso.sumChargedHadronPt*1./electron1.pt();                                                                
-    lepton.pfRelIso03_NeutralHadron = pfIso.sumNeutralHadronEt*1./electron1.pt(); 
-    lepton.pfRelIso03_Photon = pfIso.sumPhotonEt*1./electron1.pt();                                                                                                                         
-    lepton.pfRelIso03_drcor = (pfIso.sumChargedHadronPt + max(0., pfIso.sumNeutralHadronEt + pfIso.sumPhotonEt - 0.5*pfIso.sumPUPt))*1./electron1.pt();   
+		const reco::GsfElectron::PflowIsolationVariables& pfIso = electron1.pfIsolationVariables();  
+		lepton.pfRelIso03_ChargedHadron = pfIso.sumChargedHadronPt*1./electron1.pt();                                                                
+		lepton.pfRelIso03_NeutralHadron = pfIso.sumNeutralHadronEt*1./electron1.pt(); 
+		lepton.pfRelIso03_Photon = pfIso.sumPhotonEt*1./electron1.pt();                                                                                                                         
+		lepton.pfRelIso03_drcor = (pfIso.sumChargedHadronPt + max(0., pfIso.sumNeutralHadronEt + pfIso.sumPhotonEt - 0.5*pfIso.sumPUPt))*1./electron1.pt();   
   
-    lepton.dr03EcalRecHitSumEt_Rel = (electron1.pt()>35.)?(electron1.dr03EcalRecHitSumEt()*1./electron1.pt()):-100; 
-    lepton.dr03HcalDepth1TowerSumEt_Rel = (electron1.pt()>35.)?(electron1.dr03HcalDepth1TowerSumEt()*1./electron1.pt()):-100; 
-    lepton.dr03HcalDepth2TowerSumEt_Rel = (electron1.pt()>35.)?(electron1.dr03HcalDepth2TowerSumEt()*1./electron1.pt()):-100;
-    lepton.dr03TkSumPt_Rel =  (electron1.pt()>35.)?(electron1.dr03TkSumPt()*1./electron1.pt()):-100;
-    lepton.dr03TkSumPtHEEP_Rel =  (electron1.pt()>35.)?(electron1.dr03TkSumPtHEEP()*1./electron1.pt()):-100;
+		lepton.dr03EcalRecHitSumEt_Rel = (electron1.pt()>35.)?(electron1.dr03EcalRecHitSumEt()*1./electron1.pt()):-100; 
+		lepton.dr03HcalDepth1TowerSumEt_Rel = (electron1.pt()>35.)?(electron1.dr03HcalDepth1TowerSumEt()*1./electron1.pt()):-100; 
+		lepton.dr03HcalDepth2TowerSumEt_Rel = (electron1.pt()>35.)?(electron1.dr03HcalDepth2TowerSumEt()*1./electron1.pt()):-100;
+		lepton.dr03TkSumPt_Rel =  (electron1.pt()>35.)?(electron1.dr03TkSumPt()*1./electron1.pt()):-100;
+		lepton.dr03TkSumPtHEEP_Rel =  (electron1.pt()>35.)?(electron1.dr03TkSumPtHEEP()*1./electron1.pt()):-100;
     
-    //const reco::GsfElectron::PflowIsolationVariables& PfIso = electron1.isolationVariables04();//dr04IsolationVariables(); //pfIsolationVariables();  
-    //lepton.pfRelIso04_ChargedHadron = PfIso.sumChargedHadronPt*1./electron1.pt();                                                                
-    //lepton.pfRelIso04_NeutralHadron = PfIso.sumNeutralHadronEt*1./electron1.pt(); 
-    //lepton.pfRelIso04_Photon = PfIso.sumPhotonEt*1./electron1.pt();                                                                                                                         
-    //lepton.pfRelIso04_drcor = (PfIso.sumChargedHadronPt + max(0., PfIso.sumNeutralHadronEt + PfIso.sumPhotonEt - 0.5*PfIso.sumPUPt))*1./electron1.pt();   
+		//const reco::GsfElectron::PflowIsolationVariables& PfIso = electron1.isolationVariables04();//dr04IsolationVariables(); //pfIsolationVariables();  
+		//lepton.pfRelIso04_ChargedHadron = PfIso.sumChargedHadronPt*1./electron1.pt();                                                                
+		//lepton.pfRelIso04_NeutralHadron = PfIso.sumNeutralHadronEt*1./electron1.pt(); 
+		//lepton.pfRelIso04_Photon = PfIso.sumPhotonEt*1./electron1.pt();                                                                                                                         
+		//lepton.pfRelIso04_drcor = (PfIso.sumChargedHadronPt + max(0., PfIso.sumNeutralHadronEt + PfIso.sumPhotonEt - 0.5*PfIso.sumPUPt))*1./electron1.pt();   
     
-    vector<float> pfisovalues;                                                                                     
-    Read_ElePFIsolation(&electron1,Rho,pfisovalues);
-    lepton.pfRelIso03_eacor = pfisovalues[0];
-    lepton.pfRelIso04_eacor = pfisovalues[1];
+		vector<float> pfisovalues;                                                                                     
+		Read_ElePFIsolation(&electron1,Rho,pfisovalues);
+		lepton.pfRelIso03_eacor = pfisovalues[0];
+		lepton.pfRelIso04_eacor = pfisovalues[1];
     
-    // track info //
+		// track info //
     
-    lepton.chi2 = gsftrk1->normalizedChi2();                                                                                                                 
-    lepton.ndof = (int)gsftrk1->ndof();                                                                                                            
-	lepton.lostHits = (int)gsftrk1->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS);
-	lepton.hit = (int)gsftrk1->hitPattern().numberOfValidMuonHits();                                                                              
-	//lepton.nStations = (int)gsftrk1->numberOfMatchedStations();                                                                                          
-	lepton.pixhit = (int)gsftrk1->hitPattern().numberOfValidPixelHits();                                                                          
-	lepton.nTrackerLayers = (int)gsftrk1->hitPattern().trackerLayersWithMeasurement();                                                                    
-	lepton.valfrac = gsftrk1->validFraction();   
-	lepton.closeTrackNLayers = (int)electron1.closestCtfTrackNLayers();      
-    lepton.closeTrackNormChi2 = electron1.closestCtfTrackNormChi2();   
+		lepton.chi2 = gsftrk1->normalizedChi2();                                                                                                                 
+		lepton.ndof = (int)gsftrk1->ndof();                                                                                                            
+		lepton.lostHits = (int)gsftrk1->hitPattern().numberOfLostHits(reco::HitPattern::MISSING_INNER_HITS);
+		lepton.hit = (int)gsftrk1->hitPattern().numberOfValidMuonHits();                                                                              
+		//lepton.nStations = (int)gsftrk1->numberOfMatchedStations();                                                                                          
+		lepton.pixhit = (int)gsftrk1->hitPattern().numberOfValidPixelHits();                                                                          
+		lepton.nTrackerLayers = (int)gsftrk1->hitPattern().trackerLayersWithMeasurement();                                                                    
+		lepton.valfrac = gsftrk1->validFraction();   
+		lepton.closeTrackNLayers = (int)electron1.closestCtfTrackNLayers();      
+		lepton.closeTrackNormChi2 = electron1.closestCtfTrackNormChi2();   
     
-    //MiniIsolation: begin//                                                                                      
+		//MiniIsolation: begin//                                                                                      
 	
-	vector<float> isovalues;
-	Read_ElePFIsolation(&electron1,Rho,isovalues);
-	lepton.minisoall = isovalues[0];
-	lepton.minchiso = isovalues[1];
-	lepton.minnhiso = isovalues[2];
-	lepton.minphiso = isovalues[3];
+		vector<float> isovalues;
+		Read_ElePFIsolation(&electron1,Rho,isovalues);
+		lepton.minisoall = isovalues[0];
+		lepton.minchiso = isovalues[1];
+		lepton.minnhiso = isovalues[2];
+		lepton.minphiso = isovalues[3];
 	
-	// store 4-vector to vector of leptons //
-	TLorentzVector p4;
-	p4.SetPtEtaPhiM(lepton.pt, lepton.eta, lepton.phi, lepton.mass);
-	tlep.push_back(p4);
+		// store 4-vector to vector of leptons //
+		TLorentzVector p4;
+		p4.SetPtEtaPhiM(lepton.pt, lepton.eta, lepton.phi, lepton.mass);
+		tlep.push_back(p4);
 	
-	// now push lepton to vector of leptons //
-	leptons.push_back(lepton);
+		// now push lepton to vector of leptons //
+		leptons.push_back(lepton);
 	
-    if(++nLepton>=njetmx) break;                                                                                                                      
-  }
+		if(++nLepton>=njetmx) break;      
+		                                                                                                                
+	}// loop over electrons
+  
+  }//save_only_electrons
   
  // AK4 Jet //
   
@@ -560,7 +573,6 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		}
 	
 		lepton_genPartFlav = leptons[ilep].genPartFlav;
-		lepton_pdgId = leptons[ilep].pdgId;
 		
 		// create generator labels //
 		
@@ -623,24 +635,27 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		lepton_mass = leptons[ilep].mass;		
 		lepton_p = leptons[ilep].p ;
 	
-		lepton_charge = leptons[ilep].charge;
-		lepton_tightcharge = leptons[ilep].tightcharge;
+		lepton_pdgId = leptons[ilep].pdgId;
+		lepton_charge = (float)leptons[ilep].charge;
+		lepton_tightcharge = (float)leptons[ilep].tightcharge;
 		
 		lepton_dxy = leptons[ilep].dxy;
 		lepton_dz = leptons[ilep].dz;
 		lepton_dxyError = leptons[ilep].dxyError;
 		lepton_dzError = leptons[ilep].dzError;
+		lepton_dxySig = leptons[ilep].dxySig;
+		lepton_dzSig = leptons[ilep].dzSig;
 		lepton_ip3d = leptons[ilep].ip3d;
 		lepton_sip3d = leptons[ilep].sip3d;
 		lepton_dxy_sv = leptons[ilep].dxy_sv;
   
 		lepton_chi2 = leptons[ilep].chi2;
-		lepton_ndof = leptons[ilep].ndof;
+		lepton_ndof = (float)leptons[ilep].ndof;
 		lepton_trkKink = leptons[ilep].trkKink;
-		lepton_hit = leptons[ilep].hit;
-		lepton_pixhit = leptons[ilep].pixhit;
-		lepton_nTrackerLayers = leptons[ilep].nTrackerLayers;
-		lepton_lostHits = leptons[ilep].lostHits;
+		lepton_hit = (float)leptons[ilep].hit;
+		lepton_pixhit = (float)leptons[ilep].pixhit;
+		lepton_nTrackerLayers = (float)leptons[ilep].nTrackerLayers;
+		lepton_lostHits = (float)leptons[ilep].lostHits;
     
 		lepton_e_ECAL = leptons[ilep].e_ECAL;
 		lepton_e_HCAL = leptons[ilep].e_HCAL;
@@ -658,62 +673,68 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		lepton_pfRelIso03_PileUp = leptons[ilep].pfRelIso03_PileUp;
 		lepton_tkRelIso = leptons[ilep].tkRelIso;
 		
-		lepton_nStations = leptons[ilep].nStations;
-		lepton_segmentComp = leptons[ilep].segmentComp;
-    
-		lepton_isPFCand = leptons[ilep].isPFCand;
-		lepton_isGlobal = leptons[ilep].isGlobal;
-		lepton_isTracker = leptons[ilep].isTracker;
-		lepton_isLoose = leptons[ilep].isLoose;
-		lepton_isGoodGlobal = leptons[ilep].isGoodGlobal;
-		lepton_isMedium = leptons[ilep].isMedium;
-		lepton_isMedPr = leptons[ilep].isMedPr;
-		lepton_isTight = leptons[ilep].isTight;
-		lepton_isHighPt = leptons[ilep].isHighPt;
-		lepton_isHighPttrk = leptons[ilep].isHighPttrk;
-
-		lepton_posmatch = leptons[ilep].posmatch;
-    
-		lepton_mvaid_Fallv2WP90 = leptons[ilep].mvaid_Fallv2WP90;
-		lepton_mvaid_Fallv2WP90_noIso = leptons[ilep].mvaid_Fallv2WP90_noIso;
-		lepton_mvaid_Fallv2WP80 = leptons[ilep].mvaid_Fallv2WP80;
-		lepton_mvaid_Fallv2WP80_noIso = leptons[ilep].mvaid_Fallv2WP80_noIso;
-  
-		lepton_eoverp = leptons[ilep].eoverp;
- 
-		lepton_pfRelIso03_eacor = leptons[ilep].pfRelIso03_eacor ;
-		lepton_pfRelIso04_eacor = leptons[ilep].pfRelIso04_eacor;
-		lepton_dr03EcalRecHitSumEt_Rel = leptons[ilep].dr03EcalRecHitSumEt_Rel;
-		lepton_dr03HcalDepth1TowerSumEt_Rel = leptons[ilep].dr03HcalDepth1TowerSumEt_Rel;
-		lepton_dr03HcalDepth2TowerSumEt_Rel = leptons[ilep].dr03HcalDepth2TowerSumEt_Rel;
-		lepton_dr03TkSumPt_Rel = leptons[ilep].dr03TkSumPt_Rel;
-		lepton_dr03TkSumPtHEEP_Rel = leptons[ilep].dr03TkSumPtHEEP_Rel;
-  
-		lepton_eInvMinusPInv = leptons[ilep].eInvMinusPInv;
-		lepton_supcl_eta = leptons[ilep].supcl_eta;
-		lepton_supcl_phi = leptons[ilep].supcl_phi;
-		lepton_supcl_energy = leptons[ilep].supcl_energy;
-		lepton_sigmaietaieta = leptons[ilep].sigmaietaieta;
-		lepton_sigmaiphiiphi = leptons[ilep].sigmaiphiiphi;
-		lepton_r9full = leptons[ilep].r9full;
-		lepton_hcaloverecal = leptons[ilep].hcaloverecal;
-		lepton_ecloverpout = leptons[ilep].ecloverpout;
-		lepton_convVeto = leptons[ilep].convVeto;
-
-		lepton_etain = leptons[ilep].etain;
-		lepton_phiin = leptons[ilep].phiin;
-		lepton_fbrem = leptons[ilep].fbrem;
-		lepton_supcl_etaWidth = leptons[ilep].supcl_etaWidth;
-		lepton_supcl_phiWidth = leptons[ilep].supcl_phiWidth;
-  
-		lepton_e1x5bye5x5 = leptons[ilep].e1x5bye5x5;
-		lepton_convtxprob = leptons[ilep].convtxprob;
-		lepton_deltaetacltrkcalo = leptons[ilep].deltaetacltrkcalo;
-		lepton_supcl_preshvsrawe = leptons[ilep].supcl_preshvsrawe;
-  
-		lepton_closeTrackNLayers = leptons[ilep].closeTrackNLayers;
-		lepton_closeTrackNormChi2 = leptons[ilep].closeTrackNormChi2;
+		if(save_only_muons){
 		
+			lepton_nStations = leptons[ilep].nStations;
+			lepton_segmentComp = leptons[ilep].segmentComp;
+			lepton_posmatch = leptons[ilep].posmatch;
+    
+			lepton_isPFCand = (float)leptons[ilep].isPFCand;
+			lepton_isGlobal = (float)leptons[ilep].isGlobal;
+			lepton_isTracker = (float)leptons[ilep].isTracker;
+			lepton_isLoose = (float)leptons[ilep].isLoose;
+			lepton_isGoodGlobal = (float)leptons[ilep].isGoodGlobal;
+			lepton_isMedium = (float)leptons[ilep].isMedium;
+			lepton_isMedPr = (float)leptons[ilep].isMedPr;
+			lepton_isTight = (float)leptons[ilep].isTight;
+			lepton_isHighPt = (float)leptons[ilep].isHighPt;
+			lepton_isHighPttrk = (float)leptons[ilep].isHighPttrk;
+   
+		}
+		
+		if(save_only_electrons){
+    
+			lepton_mvaid_Fallv2WP90 = leptons[ilep].mvaid_Fallv2WP90;
+			lepton_mvaid_Fallv2WP90_noIso = leptons[ilep].mvaid_Fallv2WP90_noIso;
+			lepton_mvaid_Fallv2WP80 = leptons[ilep].mvaid_Fallv2WP80;
+			lepton_mvaid_Fallv2WP80_noIso = leptons[ilep].mvaid_Fallv2WP80_noIso;
+  
+			lepton_eoverp = leptons[ilep].eoverp;
+ 
+			lepton_pfRelIso03_eacor = leptons[ilep].pfRelIso03_eacor ;
+			lepton_pfRelIso04_eacor = leptons[ilep].pfRelIso04_eacor;
+			lepton_dr03EcalRecHitSumEt_Rel = leptons[ilep].dr03EcalRecHitSumEt_Rel;
+			lepton_dr03HcalDepth1TowerSumEt_Rel = leptons[ilep].dr03HcalDepth1TowerSumEt_Rel;
+			lepton_dr03HcalDepth2TowerSumEt_Rel = leptons[ilep].dr03HcalDepth2TowerSumEt_Rel;
+			lepton_dr03TkSumPt_Rel = leptons[ilep].dr03TkSumPt_Rel;
+			lepton_dr03TkSumPtHEEP_Rel = leptons[ilep].dr03TkSumPtHEEP_Rel;
+  
+			lepton_eInvMinusPInv = leptons[ilep].eInvMinusPInv;
+			lepton_supcl_eta = leptons[ilep].supcl_eta;
+			lepton_supcl_phi = leptons[ilep].supcl_phi;
+			lepton_supcl_energy = leptons[ilep].supcl_energy;
+			lepton_sigmaietaieta = leptons[ilep].sigmaietaieta;
+			lepton_sigmaiphiiphi = leptons[ilep].sigmaiphiiphi;
+			lepton_r9full = leptons[ilep].r9full;
+			lepton_hcaloverecal = leptons[ilep].hcaloverecal;
+			lepton_ecloverpout = leptons[ilep].ecloverpout;
+			lepton_convVeto = leptons[ilep].convVeto;
+
+			lepton_etain = leptons[ilep].etain;
+			lepton_phiin = leptons[ilep].phiin;
+			lepton_fbrem = leptons[ilep].fbrem;
+			lepton_supcl_etaWidth = leptons[ilep].supcl_etaWidth;
+			lepton_supcl_phiWidth = leptons[ilep].supcl_phiWidth;
+  
+			lepton_e1x5bye5x5 = leptons[ilep].e1x5bye5x5;
+			lepton_convtxprob = leptons[ilep].convtxprob;
+			lepton_deltaetacltrkcalo = leptons[ilep].deltaetacltrkcalo;
+			lepton_supcl_preshvsrawe = leptons[ilep].supcl_preshvsrawe;
+  
+			lepton_closeTrackNLayers = leptons[ilep].closeTrackNLayers;
+			lepton_closeTrackNormChi2 = leptons[ilep].closeTrackNormChi2;
+		
+		}
 		
 		// PF candidates within dR<0.5 around lepton //
 		
@@ -807,6 +828,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		}
 		
 		PFCand_pt_rel.clear();
+		PFCand_pt_rel_log.clear();
 		PFCand_eta_rel.clear();
 		PFCand_phi_rel.clear();
 		PFCand_phiAtVtx_rel.clear();
@@ -817,6 +839,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		PFCand_hcalFraction.clear();
 		PFCand_hcalFractionCalib.clear();
 		PFCand_pdgId.clear();
+		PFCand_energy_log.clear();
 		
 		PFCand_dz.clear();
 		PFCand_dzError.clear();
@@ -831,7 +854,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		PFCand_nTrackerLayers.clear();
 		PFCand_pixelhits.clear();
 		PFCand_status.clear();
-		PFCand_time.clear();
+		//PFCand_time.clear();
 		PFCand_trackHighPurity.clear();
 		PFCand_isElectron.clear();
 		PFCand_isMuon.clear();
@@ -863,6 +886,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		//		if(pfcandidates[ipf].hasTrackDetails){
 			
 			PFCand_pt_rel.push_back(pfcandidates[ipf].pt/lepton_pt);
+			PFCand_pt_rel_log.push_back(log(pfcandidates[ipf].pt/lepton_pt));
 			PFCand_eta_rel.push_back(pfcandidates[ipf].eta - lepton_eta);
 			PFCand_phi_rel.push_back(PhiInRange(pfcandidates[ipf].phi - lepton_phi));
 			PFCand_phiAtVtx_rel.push_back(PhiInRange(pfcandidates[ipf].phiAtVtx - lepton_phi));
@@ -872,7 +896,11 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 			PFCand_caloFraction.push_back(pfcandidates[ipf].caloFraction);
 			PFCand_hcalFraction.push_back(pfcandidates[ipf].hcalFraction);
 			PFCand_hcalFractionCalib.push_back(pfcandidates[ipf].hcalFractionCalib);
-			PFCand_pdgId.push_back(pfcandidates[ipf].pdgId);
+			PFCand_pdgId.push_back(float(pfcandidates[ipf].pdgId));
+			
+			TLorentzVector pfcand_p4;
+			pfcand_p4.SetPtEtaPhiM(pfcandidates[ipf].pt,pfcandidates[ipf].eta,pfcandidates[ipf].phi,pfcandidates[ipf].mass);
+			PFCand_energy_log.push_back(log(pfcand_p4.E()));
   
 			PFCand_dz.push_back(pfcandidates[ipf].dz);
 			PFCand_dzError.push_back(pfcandidates[ipf].dzError);
@@ -882,18 +910,18 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 			PFCand_dxySig.push_back(pfcandidates[ipf].dxySig);
 			PFCand_trkChi2.push_back(pfcandidates[ipf].trkChi2);
 			PFCand_vertexChi2.push_back(pfcandidates[ipf].vertexChi2);
-			PFCand_charge.push_back(pfcandidates[ipf].charge);
-			PFCand_lostInnerHits.push_back(pfcandidates[ipf].lostInnerHits);
-			PFCand_pvAssocQuality.push_back(pfcandidates[ipf].pvAssocQuality);
-			PFCand_nTrackerLayers.push_back(pfcandidates[ipf].nTrackerLayers);
-			PFCand_pixelhits.push_back(pfcandidates[ipf].pixelhits);
-			PFCand_status.push_back(pfcandidates[ipf].status);
-			PFCand_time.push_back(pfcandidates[ipf].time);
-			PFCand_trackHighPurity.push_back(pfcandidates[ipf].trackHighPurity);
-			PFCand_isElectron.push_back(pfcandidates[ipf].isElectron);
-			PFCand_isMuon.push_back(pfcandidates[ipf].isMuon);
-			PFCand_isChargedHadron.push_back(pfcandidates[ipf].isChargedHadron);
-			PFCand_fromPV.push_back(pfcandidates[ipf].fromPV);
+			PFCand_charge.push_back(float(pfcandidates[ipf].charge));
+			PFCand_lostInnerHits.push_back(float(pfcandidates[ipf].lostInnerHits));
+			PFCand_pvAssocQuality.push_back(float(pfcandidates[ipf].pvAssocQuality));
+			PFCand_nTrackerLayers.push_back(float(pfcandidates[ipf].nTrackerLayers));
+			PFCand_pixelhits.push_back(float(pfcandidates[ipf].pixelhits));
+			PFCand_status.push_back(float(pfcandidates[ipf].status));
+			//PFCand_time.push_back(pfcandidates[ipf].time);
+			PFCand_trackHighPurity.push_back(float(pfcandidates[ipf].trackHighPurity));
+			PFCand_isElectron.push_back(float(pfcandidates[ipf].isElectron));
+			PFCand_isMuon.push_back(float(pfcandidates[ipf].isMuon));
+			PFCand_isChargedHadron.push_back(float(pfcandidates[ipf].isChargedHadron));
+			PFCand_fromPV.push_back(float(pfcandidates[ipf].fromPV));
 			//	}
 			//}
 			
@@ -927,7 +955,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		
 		nSV = 0;
 		
-		SV_mass.clear(), SV_pt_rel.clear(); 
+		SV_mass.clear(), SV_pt_rel.clear(), SV_pt_rel_log.clear(); 
 		SV_deltaR.clear(); SV_eta_rel.clear(); SV_phi_rel.clear(); 
 		SV_ndof.clear(); SV_chi2.clear(); SV_ntracks.clear();
 		SV_d3d.clear(), SV_d3dError.clear(); SV_d3dSig.clear();
@@ -945,13 +973,14 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 			
 				SV_mass.push_back(sv.mass());
 				SV_pt_rel.push_back(sv.pt()/lepton_pt);
+				SV_pt_rel_log.push_back(log(sv.pt()/lepton_pt));
 				SV_eta_rel.push_back(sv.eta()-lepton_eta);
 				SV_phi_rel.push_back(PhiInRange(sv.phi()-lepton_phi));
 				SV_deltaR.push_back(delta2R(lepton_eta,lepton_phi,sv.eta(),sv.phi()));
 				
-				SV_ndof.push_back(sv.vertexNdof());
+				SV_ndof.push_back(float(sv.vertexNdof()));
 				SV_chi2.push_back(sv.vertexNormalizedChi2());
-				SV_ntracks.push_back(sv.numberOfDaughters());
+				SV_ntracks.push_back(float(sv.numberOfDaughters()));
 				
 				VertexDistance3D vdist;
 				Measurement1D dl = vdist.distance(PV_vertex, VertexState(RecoVertex::convertPos(sv.position()), RecoVertex::convertError(sv.error())));
@@ -997,6 +1026,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 			jet_p4 -= lep_p4;
 			
 			lepton_jetPtRelv2 = (lep_p4.Vect().Perp(jet_p4.Vect()))*1./lepton_pt;
+			lepton_jetPtRelv2_log = log(lepton_jetPtRelv2);
 			lepton_jetRelIso = PFJetAK4_pt[i_nearjet]*1./lepton_pt;
 			lepton_jetbtag = PFJetAK4_btag_DeepFlav[i_nearjet];
 			
