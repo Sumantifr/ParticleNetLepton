@@ -34,3 +34,5 @@ Lepton identification using ParticleNet.
 - If happy, submit the jobs by running './crab_submit.sh'
 
 - Monitor the job status by running './crab_monitor.sh'
+
+- *Don't forget to remove crab_submit.sh and crab_monitor.sh before submitting new jobs*
