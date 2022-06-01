@@ -108,6 +108,7 @@ class Lepton{
 		float dr03TkSumPtHEEP_Rel;
 		float eoverp;
 		float etain;
+		float dEtaInSeed;
 		float phiin;
 		float fbrem; 
 		// super-clyster// 
@@ -226,6 +227,7 @@ void Initialize(Lepton &lepton){
 	lepton.ecloverpout = 0;
 	lepton.convVeto = 0;
 	lepton.etain = 999;
+	lepton.dEtaInSeed = 999;
 	lepton.phiin = 999;
 	lepton.fbrem = 0;
 	lepton.supcl_etaWidth = 999;

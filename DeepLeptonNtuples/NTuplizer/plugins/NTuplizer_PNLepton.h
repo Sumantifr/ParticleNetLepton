@@ -747,7 +747,7 @@ private:
   float lepton_pfRelIso03_eacor, lepton_pfRelIso04_eacor;
   // energy cluster //
   float lepton_dr03EcalRecHitSumEt_Rel, lepton_dr03HcalDepth1TowerSumEt_Rel, lepton_dr03HcalDepth2TowerSumEt_Rel, lepton_dr03TkSumPt_Rel, lepton_dr03TkSumPtHEEP_Rel;
-  float lepton_eoverp, lepton_etain, lepton_phiin, lepton_fbrem; 
+  float lepton_eoverp, lepton_etain, lepton_dEtaInSeed, lepton_phiin, lepton_fbrem; 
   // super-clyster// 
   float lepton_supcl_eta, lepton_supcl_phi, lepton_supcl_energy; 
   float lepton_r9full;
@@ -1181,6 +1181,7 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
 	T1->Branch("lepton_convVeto", &lepton_convVeto, "lepton_convVeto/O");
 
 	T1->Branch("lepton_etain", &lepton_etain,"lepton_etain/F");
+	T1->Branch("lepton_dEtaInSeed", &lepton_dEtaInSeed,"lepton_dEtaInSeed/F");
 	T1->Branch("lepton_phiin", &lepton_phiin,"lepton_phiin/F");
 	T1->Branch("lepton_fbrem", &lepton_fbrem,"lepton_fbrem/F");
 	T1->Branch("lepton_supcl_etaWidth", &lepton_supcl_etaWidth, "lepton_supcl_etaWidth/F");

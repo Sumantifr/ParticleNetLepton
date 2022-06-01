@@ -431,7 +431,10 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		lepton.convVeto = electron1.passConversionVeto();
     
 		lepton.eInvMinusPInv =  (1-electron1.eSuperClusterOverP())/electron1.ecalEnergy(); // OR 1.0/(electron1.ecalEnergy())-1.0/(electron1.trackMomentumAtVtx().R())
-		lepton.etain = electron1.deltaEtaSuperClusterTrackAtVtx();                                                                                    
+		lepton.etain = electron1.deltaEtaSuperClusterTrackAtVtx();  
+		if(electron1.superCluster()->seed().isNonnull()){
+			lepton.dEtaInSeed = electron1.deltaEtaSuperClusterTrackAtVtx() - electron1.superCluster()->eta() + electron1.superCluster()->seed()->eta();  
+		}                                                                               
 		lepton.phiin = electron1.deltaPhiSuperClusterTrackAtVtx();                                                                                     
 		lepton.supcl_preshvsrawe = electron1.superCluster()->preshowerEnergy()/electron1.superCluster()->rawEnergy();                                                                                                                                            
 		lepton.supcl_etaWidth = electron1.superCluster()->etaWidth();                                                                                     
@@ -721,6 +724,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 			lepton_convVeto = leptons[ilep].convVeto;
 
 			lepton_etain = leptons[ilep].etain;
+			lepton_dEtaInSeed = leptons[ilep].dEtaInSeed;
 			lepton_phiin = leptons[ilep].phiin;
 			lepton_fbrem = leptons[ilep].fbrem;
 			lepton_supcl_etaWidth = leptons[ilep].supcl_etaWidth;
