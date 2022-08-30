@@ -404,7 +404,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		// GEN particle matching //
   
 		if(isMC){
-			lepton.genPartIdx  = getGenPartonIndex(lepton.eta,lepton.phi,GenPartons,13);
+			lepton.genPartIdx  = getGenPartonIndex(lepton.eta,lepton.phi,GenPartons,11);
 			lepton.genPartFlav = getGenPartonFlavor(GenPartons,lepton.genPartIdx);
 		}else{
 			lepton.genPartIdx = -1;
