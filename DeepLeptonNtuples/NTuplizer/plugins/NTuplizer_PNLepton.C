@@ -376,7 +376,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		// Energy variables //
     
 		lepton.e_ECAL = electron1.ecalEnergy()*1./electron1.energy();   
-		lepton.e_HCAL = (1.-electron1.ecalEnergy())*1./electron1.energy();  
+		lepton.e_HCAL = 1.-lepton.e_ECAL;  
     
 		// MVA id //
     
