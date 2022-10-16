@@ -172,6 +172,12 @@ Rochester correction: https://gitlab.cern.ch/akhukhun/roccor
 #include "RecoBTag/FeatureTools/interface/deep_helpers.h"
 #include "RecoBTag/FeatureTools/interface/SecondaryVertexConverter.h"
 
+// For evaluating TopMVA //
+#include "TMVA/Reader.h"
+#include <xgboost/c_api.h>
+#include <memory>
+//#include "CommonTools/CandUtils/interface/Booster.h"
+
 // Rochester correction for muons //
 #include "RoccoR.h"
 
@@ -191,7 +197,6 @@ Rochester correction: https://gitlab.cern.ch/akhukhun/roccor
     #pragma link C++ class std::vector<std::vector<float> >+;
     
 #endif
-
 
 using namespace std;
 using namespace edm;
@@ -531,7 +536,7 @@ void Read_MiniIsolation(auto obj, double Rho, vector<float> &isovalues)
 	                                                                                   
 	float ea;
 	if(abs(obj->pdgId())==13) { ea = ea_mu_miniiso_->getEffectiveArea(fabs(getEtaForEA(obj))); }
-	else { ea = ea_el_miniiso_->getEffectiveArea(fabs(getEtaForEA(obj))); }  
+	else 					  { ea = ea_el_miniiso_->getEffectiveArea(fabs(getEtaForEA(obj))); }  
 	                                                                                    
 	float R = 10.0/std::min(std::max(obj->pt(), 50.0),200.0);                                                                      
 	ea *= std::pow(R / 0.3, 2);                                                                                                                  	
@@ -603,6 +608,19 @@ float DistanceFromSV_Electron(GsfTrackRef track, edm::Handle<reco::VertexComposi
     return  dxymin;	
 } 
 
+bool JetMatchByCommonSourceCandidatePtr(auto lepton, pat::Jet jet){
+	
+	for (unsigned int i1 = 0; i1 < lepton.numberOfSourceCandidatePtrs(); i1++) {
+		auto c1s = lepton.sourceCandidatePtr(i1);
+		for (unsigned int i2 = 0; i2 < jet.numberOfSourceCandidatePtrs(); i2++) {
+			if (jet.sourceCandidatePtr(i2) == c1s){
+				return true;
+			}
+		}
+	}	
+	return false;
+}
+
 //class declaration
 //
 class PNLepton : public edm::EDAnalyzer {
@@ -635,6 +653,7 @@ private:
   bool read_btagSF;
   bool subtractLepton_fromAK4, subtractLepton_fromAK8;
   bool save_only_muons, save_only_electrons;
+  bool matchbydR;
   
   uint nPDFsets;
   
@@ -707,10 +726,8 @@ private:
   float PFJetAK4_pt[njetmx], PFJetAK4_eta[njetmx], PFJetAK4_y[njetmx], PFJetAK4_phi[njetmx], PFJetAK4_mass[njetmx];
   float PFJetAK4_btag_DeepCSV[njetmx], PFJetAK4_btag_DeepFlav[njetmx]; 
   bool PFJetAK4_jetID[njetmx], PFJetAK4_jetID_tightlepveto[njetmx];
-  float PFJetAK4_JEC[njetmx];
-  int PFJetAK4_hadronflav[njetmx], PFJetAK4_partonflav[njetmx];
-  int PFJetAK4_Ncons[njetmx];
   float PFJetAK4_qgl[njetmx], PFJetAK4_PUID[njetmx];
+  unsigned PFJetAK4_index[njetmx];
   
   // Lepton variables //
   
@@ -743,6 +760,8 @@ private:
   
   // ID booleans //
   bool lepton_mvaid_Fallv2WP90_noIso, lepton_mvaid_Fallv2WP90, lepton_mvaid_Fallv2WP80_noIso, lepton_mvaid_Fallv2WP80;
+  // ID values //
+  float lepton_mvaFall17V1Iso, lepton_mvaFall17V1noIso, lepton_mvaFall17V2Iso, lepton_mvaFall17V2noIso;
   // isolation //
   float lepton_pfRelIso03_eacor, lepton_pfRelIso04_eacor;
   // energy cluster //
@@ -754,7 +773,7 @@ private:
   float lepton_supcl_etaWidth;
   float lepton_supcl_phiWidth;
   float lepton_hcaloverecal;
-  int  lepton_closeTrackNLayers;
+  float  lepton_closeTrackNLayers;
   float lepton_closeTrackNormChi2;
   float lepton_e1x5bye5x5;
   float lepton_normchi2;
@@ -764,19 +783,23 @@ private:
   float lepton_supcl_preshvsrawe;
   float lepton_sigmaietaieta, lepton_sigmaiphiiphi;
   float lepton_eInvMinusPInv;
-  bool lepton_convVeto; 
+  float lepton_convVeto; 
   int lepton_genPartFlav;
   //track//
   float lepton_posmatch, lepton_segmentComp;
-  int lepton_nStations;
+  float lepton_nStations;
   // ID booleans //
   float lepton_isPFCand, lepton_isGlobal, lepton_isTracker;
   float lepton_isGoodGlobal, lepton_isTight, lepton_isHighPt, lepton_isHighPttrk, lepton_isMedium, lepton_isMedPr, lepton_isLoose;
   
-  float lepton_jetPtRelv2, lepton_jetPtRelv2_log, lepton_jetRelIso, lepton_jetbtag;
+  float lepton_jetPtRelv2_abs, lepton_jetPtRelv2, lepton_jetPtRelv2_log, lepton_jetRelIso, lepton_jetPtRatio, lepton_jetbtag, lepton_jetbtag_DeepCSV;
+  int lepton_jetNDauCharged;
+  int lepton_jethadronflavor, lepton_jetpartonflavor, lepton_jetnConstituents;
   
-  int label_Muon_Prompt, label_Muon_fromTau, label_Muon_fromHFHadron, label_Muon_fromLFHadron, label_Muon_fromPhoton, label_Muon_unknown, label_Muon_fromPhotonORunknown;
-  int label_Electron_Prompt, label_Electron_fromTau, label_Electron_fromHFHadron, label_Electron_fromLFHadron, label_Electron_fromPhoton, label_Electron_unknown, label_Electron_fromPhotonORunknown;
+  float lepton_TopMVAScore, lepton_Topv2MVAScore;
+  
+  int label_Muon_Prompt, label_Muon_fromTau, label_Muon_fromHFHadron, label_Muon_fromLFHadron, label_Muon_fromPhoton, label_Muon_unknown, label_Muon_fromPhotonORunknown, label_Muon_PromptORTau;
+  int label_Electron_Prompt, label_Electron_fromTau, label_Electron_fromHFHadron, label_Electron_fromLFHadron, label_Electron_fromPhoton, label_Electron_unknown, label_Electron_fromPhotonORunknown, label_Electron_PromptORTau;
   int label_unknown;
   bool label_Muon, label_Electron;
   bool label_fromTop, label_fromW, label_fromZ, label_fromH, label_fromNP, label_fromQCD, label_fromQCD_b, label_fromQCD_c, label_fromQCD_l, label_others, label_noGenMatch;
@@ -799,6 +822,7 @@ private:
   int nPFCand;
   
   int nChargePFCand;
+  
   vector<float> PFCand_pt_rel;
   vector<float> PFCand_pt_rel_log;
   vector<float> PFCand_eta_rel;
@@ -812,7 +836,6 @@ private:
   vector<float> PFCand_hcalFractionCalib;
   vector<float> PFCand_pdgId;
   vector<float> PFCand_energy_log;
-  
   vector<float> PFCand_dz;
   vector<float> PFCand_dzError;
   vector<float> PFCand_dzSig;
@@ -850,6 +873,44 @@ private:
   vector<bool> NeutralPFCand_isPhoton;
   vector<bool> NeutralPFCand_isNeutralHadron;
   */
+  
+  // PF candidates including lepton //
+  
+  vector<float> PFCandplusLep_pt_rel;
+  vector<float> PFCandplusLep_pt_rel_log;
+  vector<float> PFCandplusLep_pt_log;
+  vector<float> PFCandplusLep_eta_rel;
+  vector<float> PFCandplusLep_phiAtVtx_rel;
+  vector<float> PFCandplusLep_deltaR;
+  vector<float> PFCandplusLep_puppiWeight;
+  vector<float> PFCandplusLep_puppiWeightNoLep;
+  vector<float> PFCandplusLep_caloFraction;
+  vector<float> PFCandplusLep_hcalFraction;
+  vector<float> PFCandplusLep_hcalFractionCalib;
+  vector<float> PFCandplusLep_pdgId;
+  vector<float> PFCandplusLep_energy_log;
+  vector<float> PFCandplusLep_dz;
+  vector<float> PFCandplusLep_dzError;
+  vector<float> PFCandplusLep_dzSig;
+  vector<float> PFCandplusLep_dxy;
+  vector<float> PFCandplusLep_dxyError;
+  vector<float> PFCandplusLep_dxySig;
+  vector<float> PFCandplusLep_trkChi2;
+  vector<float> PFCandplusLep_vertexChi2;
+  vector<float> PFCandplusLep_charge;
+  vector<float> PFCandplusLep_lostInnerHits;
+  vector<float> PFCandplusLep_pvAssocQuality;
+  vector<float> PFCandplusLep_nTrackerLayers;
+  vector<float> PFCandplusLep_pixelhits;
+  vector<float> PFCandplusLep_status;
+  //vector<float> PFCand_time;
+  vector<float> PFCandplusLep_trackHighPurity;
+  vector<float> PFCandplusLep_isElectron;
+  vector<float> PFCandplusLep_isMuon;
+  vector<float> PFCandplusLep_isChargedHadron;
+  vector<float> PFCandplusLep_fromPV;
+  
+  
   // secondary vertices //
   int nSV;
   vector<float> SV_pt_rel;
@@ -926,6 +987,16 @@ private:
   
   // GEN particles //
   vector<GenParton> GenPartons;
+  
+  //TopLepton MVA (from Ghent Univ.) //
+  
+  std::shared_ptr<TMVA::Reader> reader[2]; 
+  BoosterHandle booster[2];
+  BoosterHandle boosterv2[2];
+  float boosterVars[2][1][15];
+  
+  std::string m_mu_TopUL18_XGB, m_el_TopUL18_XGB, m_mu_Topv2UL18_XGB, m_el_Topv2UL18_XGB;
+  
 };
 
 //
@@ -958,6 +1029,7 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   read_btagSF = pset.getUntrackedParameter<bool>("Read_btagging_SF", false);
   save_only_muons = pset.getUntrackedParameter<bool>("Save_only_Muons", false);
   save_only_electrons = pset.getUntrackedParameter<bool>("Save_only_Electrons", false);
+  matchbydR = pset.getUntrackedParameter<bool>("MacthwithDR", false);
 
   minjPt = pset.getUntrackedParameter<double>("minjPt",25.);
   minmuPt = pset.getUntrackedParameter<double>("minmuPt",10.);
@@ -1013,6 +1085,11 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   
   mRochcorFolder = pset.getParameter<std::string>("RochcorFolder");
   
+  m_mu_TopUL18_XGB = pset.getParameter<std::string>("mu_TopUL18_XGB_weights");
+  m_el_TopUL18_XGB = pset.getParameter<std::string>("el_TopUL18_XGB_weights");
+  m_mu_Topv2UL18_XGB = pset.getParameter<std::string>("mu_Topv2UL18_XGB_weights");
+  m_el_Topv2UL18_XGB = pset.getParameter<std::string>("el_Topv2UL18_XGB_weights");
+  
   //T1 = new TTree("Events", "ParticleNet");
   T1 = fs->make<TTree>("tree","ParticleNet") ;
  
@@ -1037,6 +1114,7 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   T1->Branch("label_Muon_fromPhoton", &label_Muon_fromPhoton, "label_Muon_fromPhoton/I");
   T1->Branch("label_Muon_unknown", &label_Muon_unknown, "label_Muon_unknown/I");
   T1->Branch("label_Muon_fromPhotonORunknown", &label_Muon_fromPhotonORunknown, "label_Muon_fromPhotonORunknown/I");
+  T1->Branch("label_Muon_PromptORTau", &label_Muon_PromptORTau, "label_Muon_PromptORTau/I");
   T1->Branch("label_Electron_Prompt", &label_Electron_Prompt, "label_Electron_Prompt/I");
   T1->Branch("label_Electron_fromTau", &label_Electron_fromTau, "label_Electron_fromTau/I");
   T1->Branch("label_Electron_fromHFHadron", &label_Electron_fromHFHadron, "label_Electron_fromHFHadron/I");
@@ -1044,6 +1122,7 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   T1->Branch("label_Electron_fromPhoton", &label_Electron_fromPhoton, "label_Electron_fromPhoton/I");
   T1->Branch("label_Electron_unknown", &label_Electron_unknown, "label_Electron_unknown/I");
   T1->Branch("label_Electron_fromPhotonORunknown", &label_Electron_fromPhotonORunknown, "label_Electron_fromPhotonORunknown/I");
+  T1->Branch("label_Electron_PromptORTau", &label_Electron_PromptORTau, "label_Electron_PromptORTau/I");
   T1->Branch("label_unknown", &label_unknown, "label_unknown/I");
   T1->Branch("label_Muon", &label_Muon, "label_Muon/O");
   T1->Branch("label_Electron", &label_Electron, "label_Electron/O");
@@ -1123,7 +1202,7 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
 	// Muon-specfic variables //
   
 	T1->Branch("lepton_trkKink", &lepton_trkKink,"lepton_trkKink/F");
-	T1->Branch("lepton_nStations", &lepton_nStations,"lepton_nStations/I");
+	T1->Branch("lepton_nStations", &lepton_nStations,"lepton_nStations/F");
 	T1->Branch("lepton_segmentComp", &lepton_segmentComp,"lepton_segmentComp/F");
 	T1->Branch("lepton_posmatch", &lepton_posmatch,"lepton_posmatch/F");
   
@@ -1150,6 +1229,11 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
 	T1->Branch("lepton_mvaid_Fallv2WP90_noIso", &lepton_mvaid_Fallv2WP90_noIso,"lepton_mvaid_Fallv2WP90_noIso/O");
 	T1->Branch("lepton_mvaid_Fallv2WP80", &lepton_mvaid_Fallv2WP80,"lepton_mvaid_Fallv2WP80/O");
 	T1->Branch("lepton_mvaid_Fallv2WP80_noIso", &lepton_mvaid_Fallv2WP80_noIso,"lepton_mvaid_Fallv2WP80_noIso/O");
+	
+	T1->Branch("lepton_mvaFall17V1Iso", &lepton_mvaFall17V1Iso,"lepton_mvaFall17V1Iso/F");
+	T1->Branch("lepton_mvaFall17V1noIso", &lepton_mvaFall17V1noIso,"lepton_mvaFall17V1noIso/F");
+	T1->Branch("lepton_mvaFall17V2Iso", &lepton_mvaFall17V2Iso,"lepton_mvaFall17V2Iso/F");
+	T1->Branch("lepton_mvaFall17V2noIso", &lepton_mvaFall17V2noIso,"lepton_mvaFall17V2noIso/F");
   
 	// Electron energy cluster shapes //
   
@@ -1178,7 +1262,7 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   
 	T1->Branch("lepton_hcaloverecal", &lepton_hcaloverecal, "lepton_hcaloverecal/F");
 	T1->Branch("lepton_ecloverpout", &lepton_ecloverpout, "lepton_ecloverpout/F"); 
-	T1->Branch("lepton_convVeto", &lepton_convVeto, "lepton_convVeto/O");
+	T1->Branch("lepton_convVeto", &lepton_convVeto, "lepton_convVeto/F");
 
 	T1->Branch("lepton_etain", &lepton_etain,"lepton_etain/F");
 	T1->Branch("lepton_dEtaInSeed", &lepton_dEtaInSeed,"lepton_dEtaInSeed/F");
@@ -1192,57 +1276,69 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
 	T1->Branch("lepton_deltaetacltrkcalo", &lepton_deltaetacltrkcalo, "lepton_deltaetacltrkcalo/F");
 	T1->Branch("lepton_supcl_preshvsrawe", &lepton_supcl_preshvsrawe, "lepton_supcl_preshvsrawe/F");
   
-	T1->Branch("lepton_closeTrackNLayers", &lepton_closeTrackNLayers, "lepton_closeTrackNLayers/I");
+	T1->Branch("lepton_closeTrackNLayers", &lepton_closeTrackNLayers, "lepton_closeTrackNLayers/F");
 	T1->Branch("lepton_closeTrackNormChi2", &lepton_closeTrackNormChi2, "lepton_closeTrackNormChi2/F");
   
   }
   
   // Nearest jet features //
   
+  T1->Branch("lepton_jetPtRelv2_abs", &lepton_jetPtRelv2_abs, "lepton_jetPtRelv2_abs/F");
   T1->Branch("lepton_jetPtRelv2", &lepton_jetPtRelv2, "lepton_jetPtRelv2/F");
   T1->Branch("lepton_jetPtRelv2_log", &lepton_jetPtRelv2_log, "lepton_jetPtRelv2_log/F");
   T1->Branch("lepton_jetRelIso", &lepton_jetRelIso, "lepton_jetRelIso/F");
+  T1->Branch("lepton_jetPtRatio", &lepton_jetPtRatio, "lepton_jetPtRatio/F");
   T1->Branch("lepton_jetbtag", &lepton_jetbtag, "lepton_jetbtag/F");
+  T1->Branch("lepton_jetbtag_DeepCSV", &lepton_jetbtag_DeepCSV, "lepton_jetbtag_DeepCSV/F");
+  T1->Branch("lepton_jetNDauCharged", &lepton_jetNDauCharged, "lepton_jetNDauCharged/I");
+  T1->Branch("lepton_jethadronflavor", &lepton_jethadronflavor, "lepton_jethadronflavor/I");
+  T1->Branch("lepton_jetpartonflavor", &lepton_jetpartonflavor, "lepton_jetpartonflavor/I");
+  T1->Branch("lepton_jetnConstituents", &lepton_jetnConstituents, "lepton_jetnConstituents/I");
+ 
+  // TopMVA (from Ghent) //
+  
+  T1->Branch("lepton_TopMVAScore", &lepton_TopMVAScore, "lepton_TopMVAScore/F");
+  T1->Branch("lepton_Topv2MVAScore", &lepton_Topv2MVAScore, "lepton_Topv2MVAScore/F");
   
   // PF candidates //
   
   T1->Branch("nPFCand",&nPFCand,"nPFCand/I");
   
-  T1->Branch("PFCand_pt_rel",&PFCand_pt_rel);
+  //T1->Branch("PFCand_pt_rel",&PFCand_pt_rel);
   T1->Branch("PFCand_pt_rel_log",&PFCand_pt_rel_log);
   T1->Branch("PFCand_eta_rel",&PFCand_eta_rel);
   T1->Branch("PFCand_phi_rel",&PFCand_phi_rel);
   T1->Branch("PFCand_phiAtVtx_rel",&PFCand_phiAtVtx_rel);
   T1->Branch("PFCand_deltaR",&PFCand_deltaR);
   //T1->Branch("PFCand_mass",&PFCand_mass);
-  T1->Branch("PFCand_pdgId",&PFCand_pdgId);
-  T1->Branch("PFCand_caloFraction",&PFCand_caloFraction);
-  T1->Branch("PFCand_hcalFraction",&PFCand_hcalFraction);
+  //T1->Branch("PFCand_pdgId",&PFCand_pdgId);
+  //T1->Branch("PFCand_caloFraction",&PFCand_caloFraction);
+  //T1->Branch("PFCand_hcalFraction",&PFCand_hcalFraction);
   T1->Branch("PFCand_hcalFractionCalib",&PFCand_hcalFractionCalib);
-  T1->Branch("PFCand_puppiWeight",&PFCand_puppiWeight);
+  //T1->Branch("PFCand_puppiWeight",&PFCand_puppiWeight);
   T1->Branch("PFCand_puppiWeightNoLep",&PFCand_puppiWeightNoLep);
   T1->Branch("PFCand_energy_log",&PFCand_energy_log);
-  
   T1->Branch("PFCand_dz",&PFCand_dz);
-  T1->Branch("PFCand_dzError",&PFCand_dzError);
+  //T1->Branch("PFCand_dzError",&PFCand_dzError);
   T1->Branch("PFCand_dzSig",&PFCand_dzSig);
   T1->Branch("PFCand_dxy",&PFCand_dxy);
-  T1->Branch("PFCand_dxyError",&PFCand_dxyError);
+  //T1->Branch("PFCand_dxyError",&PFCand_dxyError);
   T1->Branch("PFCand_dxySig",&PFCand_dxySig);
   //T1->Branch("PFCand_vertexChi2",&PFCand_vertexChi2);
   //T1->Branch("PFCand_time",&PFCand_time);
-  T1->Branch("PFCand_charge",&PFCand_charge);
+  //T1->Branch("PFCand_charge",&PFCand_charge);
   T1->Branch("PFCand_lostInnerHits",&PFCand_lostInnerHits);
   T1->Branch("PFCand_pvAssocQuality",&PFCand_pvAssocQuality);
-  T1->Branch("PFCand_status",&PFCand_status);
+  //T1->Branch("PFCand_status",&PFCand_status);
   T1->Branch("PFCand_pixelhits",&PFCand_pixelhits);
   T1->Branch("PFCand_nTrackerLayers",&PFCand_nTrackerLayers);
-  T1->Branch("PFCand_trkChi2",&PFCand_trkChi2);
-  T1->Branch("PFCand_trackHighPurity",&PFCand_trackHighPurity);
+  //T1->Branch("PFCand_trkChi2",&PFCand_trkChi2);
+  //T1->Branch("PFCand_trackHighPurity",&PFCand_trackHighPurity);
   T1->Branch("PFCand_isElectron",&PFCand_isElectron);
   T1->Branch("PFCand_isMuon",&PFCand_isMuon);
   T1->Branch("PFCand_isChargedHadron",&PFCand_isChargedHadron);
   T1->Branch("PFCand_fromPV",&PFCand_fromPV);
+  
   /*
   T1->Branch("NeutralPFCand_pt_rel",&NeutralPFCand_pt_rel);
   T1->Branch("NeutralPFCand_eta_rel",&NeutralPFCand_eta_rel);
@@ -1259,6 +1355,41 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   T1->Branch("NeutralPFCand_isPhoton",&NeutralPFCand_isPhoton);
   T1->Branch("NeutralPFCand_isNeutralHadron",&NeutralPFCand_isNeutralHadron);
   */
+  
+  // PF candidates including lepton //
+  
+  //T1->Branch("PFCandplusLep_pt_rel",&PFCandplusLep_pt_rel);
+  T1->Branch("PFCandplusLep_pt_rel_log",&PFCandplusLep_pt_rel_log);
+  T1->Branch("PFCandplusLep_pt_log",&PFCandplusLep_pt_log);
+  T1->Branch("PFCandplusLep_eta_rel",&PFCandplusLep_eta_rel);
+  T1->Branch("PFCandplusLep_phiAtVtx_rel",&PFCandplusLep_phiAtVtx_rel);
+  T1->Branch("PFCandplusLep_deltaR",&PFCandplusLep_deltaR);
+  //T1->Branch("PFCandplusLep_pdgId",&PFCandplusLep_pdgId);
+  T1->Branch("PFCandplusLep_caloFraction",&PFCandplusLep_caloFraction);
+  //T1->Branch("PFCandplusLep_hcalFraction",&PFCandplusLep_hcalFraction);
+  T1->Branch("PFCandplusLep_hcalFractionCalib",&PFCandplusLep_hcalFractionCalib);
+  T1->Branch("PFCandplusLep_puppiWeight",&PFCandplusLep_puppiWeight);
+  T1->Branch("PFCandplusLep_puppiWeightNoLep",&PFCandplusLep_puppiWeightNoLep);
+  T1->Branch("PFCandplusLep_energy_log",&PFCandplusLep_energy_log);  
+  T1->Branch("PFCandplusLep_dz",&PFCandplusLep_dz);
+  //T1->Branch("PFCandplusLep_dzError",&PFCandplusLep_dzError);
+  T1->Branch("PFCandplusLep_dzSig",&PFCandplusLep_dzSig);
+  T1->Branch("PFCandplusLep_dxy",&PFCandplusLep_dxy);
+  //T1->Branch("PFCandplusLep_dxyError",&PFCandplusLep_dxyError);
+  T1->Branch("PFCandplusLep_dxySig",&PFCandplusLep_dxySig);
+  T1->Branch("PFCandplusLep_charge",&PFCandplusLep_charge);
+  T1->Branch("PFCandplusLep_lostInnerHits",&PFCandplusLep_lostInnerHits);
+  T1->Branch("PFCandplusLep_pvAssocQuality",&PFCandplusLep_pvAssocQuality);
+  //T1->Branch("PFCandplusLep_status",&PFCandplusLep_status);
+  //T1->Branch("PFCandplusLep_pixelhits",&PFCandplusLep_pixelhits);
+  T1->Branch("PFCandplusLep_nTrackerLayers",&PFCandplusLep_nTrackerLayers);
+  T1->Branch("PFCandplusLep_trkChi2",&PFCandplusLep_trkChi2);
+  //T1->Branch("PFCandplusLep_trackHighPurity",&PFCandplusLep_trackHighPurity);
+  T1->Branch("PFCandplusLep_isElectron",&PFCandplusLep_isElectron);
+  T1->Branch("PFCandplusLep_isMuon",&PFCandplusLep_isMuon);
+  T1->Branch("PFCandplusLep_isChargedHadron",&PFCandplusLep_isChargedHadron);
+  T1->Branch("PFCandplusLep_fromPV",&PFCandplusLep_fromPV);
+  
   // Secondary vertices //
   
   T1->Branch("nSV",&nSV,"nSV/I");
@@ -1303,6 +1434,18 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   
   } //isMC
  
+ 		
+  XGBoosterCreate(NULL, 0, &booster[0]);
+  XGBoosterCreate(NULL, 0, &booster[1]);
+  	
+  XGBoosterLoadModel(booster[0], m_mu_TopUL18_XGB.c_str());   
+  XGBoosterLoadModel(booster[1], m_el_TopUL18_XGB.c_str()); 
+  
+  XGBoosterCreate(NULL, 0, &boosterv2[0]);
+  XGBoosterCreate(NULL, 0, &boosterv2[1]);
+  
+  XGBoosterLoadModel(boosterv2[0], m_mu_Topv2UL18_XGB.c_str());   
+  XGBoosterLoadModel(boosterv2[1], m_el_Topv2UL18_XGB.c_str()); 
   
   Nevt=0;
 }

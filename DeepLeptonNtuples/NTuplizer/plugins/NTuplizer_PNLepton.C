@@ -332,11 +332,13 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 				lepton.pfRelIso03_Photon = muon1->pfIsolationR03().sumPhotonEt*1./muon1->pt();     
 				lepton.pfRelIso03_PileUp = muon1->pfIsolationR03().sumPUPt*1./muon1->pt();  
 				lepton.tkRelIso = muon1->isolationR03().sumPt/muon1->tunePMuonBestTrack()->pt();
-			
+				
 				// store 4-vector to vector of leptons //
 				TLorentzVector p4;
 				p4.SetPtEtaPhiM(lepton.pt, lepton.eta, lepton.phi, lepton.mass);
 				tlep.push_back(p4);
+				
+				lepton.MuonPtr = (*muon1);
 			
 				// now push lepton to vector of leptons //
 				leptons.push_back(lepton);
@@ -384,6 +386,11 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		lepton.mvaid_Fallv2WP90_noIso = electron1.electronID(melectronID_noisowp90);                                                                             
 		lepton.mvaid_Fallv2WP80 = electron1.electronID(melectronID_isowp80);                                                                                 
 		lepton.mvaid_Fallv2WP80_noIso = electron1.electronID(melectronID_noisowp80);   
+		
+		lepton.mvaFall17V1Iso = electron1.userFloat("ElectronMVAEstimatorRun2Fall17IsoV1Values");
+		lepton.mvaFall17V1noIso = electron1.userFloat("ElectronMVAEstimatorRun2Fall17NoIsoV1Values");
+		lepton.mvaFall17V2Iso = electron1.userFloat("ElectronMVAEstimatorRun2Fall17IsoV2Values");
+		lepton.mvaFall17V2noIso = electron1.userFloat("ElectronMVAEstimatorRun2Fall17NoIsoV2Values");
     
 		// displacement //
                                                                                  
@@ -469,6 +476,15 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		lepton.pfRelIso03_eacor = pfisovalues[0];
 		lepton.pfRelIso04_eacor = pfisovalues[1];
     
+		//MiniIsolation//                                                                                      
+	
+		vector<float> isovalues;
+		Read_MiniIsolation(&electron1,Rho,isovalues);
+		lepton.minisoall = isovalues[0];
+		lepton.minchiso = isovalues[1];
+		lepton.minnhiso = isovalues[2];
+		lepton.minphiso = isovalues[3];
+		
 		// track info //
     
 		lepton.chi2 = gsftrk1->normalizedChi2();                                                                                                                 
@@ -481,20 +497,13 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		lepton.valfrac = gsftrk1->validFraction();   
 		lepton.closeTrackNLayers = (int)electron1.closestCtfTrackNLayers();      
 		lepton.closeTrackNormChi2 = electron1.closestCtfTrackNormChi2();   
-    
-		//MiniIsolation: begin//                                                                                      
-	
-		vector<float> isovalues;
-		Read_ElePFIsolation(&electron1,Rho,isovalues);
-		lepton.minisoall = isovalues[0];
-		lepton.minchiso = isovalues[1];
-		lepton.minnhiso = isovalues[2];
-		lepton.minphiso = isovalues[3];
 	
 		// store 4-vector to vector of leptons //
 		TLorentzVector p4;
 		p4.SetPtEtaPhiM(lepton.pt, lepton.eta, lepton.phi, lepton.mass);
 		tlep.push_back(p4);
+		
+		lepton.ElectronPtr = electron1;
 	
 		// now push lepton to vector of leptons //
 		leptons.push_back(lepton);
@@ -513,18 +522,11 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
       
 	const auto &ak4jet = (*pfjetAK4s)[jet];
     TLorentzVector pfjetAK4_4v(ak4jet.correctedP4("Uncorrected").px(),ak4jet.correctedP4("Uncorrected").py(),ak4jet.correctedP4("Uncorrected").pz(), ak4jet.correctedP4("Uncorrected").energy());
-    
-    double tmprecpt = pfjetAK4_4v.Pt();
-   
-    double total_cor =1;
-    Read_JEC(total_cor,tmprecpt,pfjetAK4_4v.Eta(),Rho,isData,ak4jet,jecL1FastAK4,jecL2RelativeAK4,jecL3AbsoluteAK4,jecL2L3ResidualAK4);  
-    PFJetAK4_JEC[nPFJetAK4] = total_cor;
-    
-    tmprecpt = pfjetAK4_4v.Pt();
-    if(tmprecpt<minjPt) continue;
+  
+    if(pfjetAK4_4v.Pt()<minjPt) continue;
     if(abs(pfjetAK4_4v.Rapidity())>maxEta) continue;
       
-    PFJetAK4_pt[nPFJetAK4] = 	tmprecpt;
+    PFJetAK4_pt[nPFJetAK4] = 	pfjetAK4_4v.Pt();
     PFJetAK4_eta[nPFJetAK4] = 	pfjetAK4_4v.Eta();
     PFJetAK4_y[nPFJetAK4] = pfjetAK4_4v.Rapidity();
     PFJetAK4_phi[nPFJetAK4] = pfjetAK4_4v.Phi();
@@ -546,16 +548,17 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
     PFJetAK4_jetID[nPFJetAK4] = getJetID(AK4idvars,"CHS",year,PFJetAK4_eta[nPFJetAK4],false,isUltraLegacy);
     PFJetAK4_jetID_tightlepveto[nPFJetAK4] = getJetID(AK4idvars,"CHS",year,PFJetAK4_eta[nPFJetAK4],true,isUltraLegacy);
       
-    PFJetAK4_hadronflav[nPFJetAK4] = ak4jet.hadronFlavour();
-    PFJetAK4_partonflav[nPFJetAK4] = ak4jet.partonFlavour();
-      
     PFJetAK4_qgl[nPFJetAK4] = ak4jet.userFloat("QGTagger:qgLikelihood");
     PFJetAK4_PUID[nPFJetAK4] = ak4jet.userFloat("pileupJetId:fullDiscriminant");
-    
+        
     // B tagging stuffs //
     
     PFJetAK4_btag_DeepCSV[nPFJetAK4] = ak4jet.bDiscriminator("pfDeepCSVJetTags:probb")+ak4jet.bDiscriminator("pfDeepCSVJetTags:probbb");
     PFJetAK4_btag_DeepFlav[nPFJetAK4] = ak4jet.bDiscriminator("pfDeepFlavourJetTags:probb") + ak4jet.bDiscriminator("pfDeepFlavourJetTags:probbb")+ak4jet.bDiscriminator("pfDeepFlavourJetTags:problepb");
+    
+    // store jet index in collection //
+    
+    PFJetAK4_index[nPFJetAK4] = jet;
      
     nPFJetAK4++;	
     if(nPFJetAK4 >= njetmx) { break;}
@@ -608,6 +611,9 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		
 		if((label_Muon_fromPhoton+label_Muon_unknown)==1) {  label_Muon_fromPhotonORunknown = 1;  }
 		if((label_Electron_fromPhoton+label_Electron_unknown)==1) {  label_Electron_fromPhotonORunknown = 1;  }
+		
+		if((label_Muon_Prompt+label_Muon_fromTau)==1) { label_Muon_PromptORTau = 1; }
+		if((label_Electron_Prompt+label_Electron_fromTau)==1) { label_Electron_PromptORTau = 1; }
 		
 		label_fromTop = label_fromW = label_fromZ = label_fromH = label_fromNP = false;
 		label_fromQCD = label_fromQCD_b = label_fromQCD_c = label_fromQCD_l = label_others = label_noGenMatch = false;
@@ -678,7 +684,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		
 		if(save_only_muons){
 		
-			lepton_nStations = leptons[ilep].nStations;
+			lepton_nStations = (float)leptons[ilep].nStations;
 			lepton_segmentComp = leptons[ilep].segmentComp;
 			lepton_posmatch = leptons[ilep].posmatch;
     
@@ -701,6 +707,11 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 			lepton_mvaid_Fallv2WP90_noIso = leptons[ilep].mvaid_Fallv2WP90_noIso;
 			lepton_mvaid_Fallv2WP80 = leptons[ilep].mvaid_Fallv2WP80;
 			lepton_mvaid_Fallv2WP80_noIso = leptons[ilep].mvaid_Fallv2WP80_noIso;
+			
+			lepton_mvaFall17V1Iso = leptons[ilep].mvaFall17V1Iso;
+			lepton_mvaFall17V1noIso = leptons[ilep].mvaFall17V1noIso;
+			lepton_mvaFall17V2Iso = leptons[ilep].mvaFall17V2Iso;
+			lepton_mvaFall17V2noIso = leptons[ilep].mvaFall17V2noIso;
   
 			lepton_eoverp = leptons[ilep].eoverp;
  
@@ -721,7 +732,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 			lepton_r9full = leptons[ilep].r9full;
 			lepton_hcaloverecal = leptons[ilep].hcaloverecal;
 			lepton_ecloverpout = leptons[ilep].ecloverpout;
-			lepton_convVeto = leptons[ilep].convVeto;
+			lepton_convVeto = (float)leptons[ilep].convVeto;
 
 			lepton_etain = leptons[ilep].etain;
 			lepton_dEtaInSeed = leptons[ilep].dEtaInSeed;
@@ -735,7 +746,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 			lepton_deltaetacltrkcalo = leptons[ilep].deltaetacltrkcalo;
 			lepton_supcl_preshvsrawe = leptons[ilep].supcl_preshvsrawe;
   
-			lepton_closeTrackNLayers = leptons[ilep].closeTrackNLayers;
+			lepton_closeTrackNLayers = (float)leptons[ilep].closeTrackNLayers;
 			lepton_closeTrackNormChi2 = leptons[ilep].closeTrackNormChi2;
 		
 		}
@@ -744,18 +755,19 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		
 		nPFCand = 0;  
 		
-		vector<PFlowCandidate> pfcandidates;                                                                                                                                      
+		vector<PFlowCandidate> pfcandidates; 
+		
+		float dRmin = DR_PFCand_Minimum;                                                                                                                                                                                                                                    
   
 		if(pfcands.isValid() && pfcands->size()>0) {                                                                                                           
     
 			edm::View<pat::PackedCandidate>::const_iterator pfcand1;     
 			
 			float dRmax = DR_PFCand_Maximum;  
-			float dRmin = DR_PFCand_Minimum;                                                                                               
-
+			
 			for( pfcand1 = pfcands->begin(); pfcand1 < pfcands->end(); pfcand1++ ) {    
 		
-				if(delta2R(leptons[ilep].eta,leptons[ilep].phi,pfcand1->eta(),pfcand1->phi())<dRmax && delta2R(leptons[ilep].eta,leptons[ilep].phi,pfcand1->eta(),pfcand1->phi())>dRmin){
+				if(delta2R(leptons[ilep].eta,leptons[ilep].phi,pfcand1->eta(),pfcand1->phi())<dRmax){ // && delta2R(leptons[ilep].eta,leptons[ilep].phi,pfcand1->eta(),pfcand1->phi())>dRmin){
 				
 					PFlowCandidate pfcand;
 					Initialize_PFlowCandidate(pfcand);
@@ -844,7 +856,6 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		PFCand_hcalFractionCalib.clear();
 		PFCand_pdgId.clear();
 		PFCand_energy_log.clear();
-		
 		PFCand_dz.clear();
 		PFCand_dzError.clear();
 		PFCand_dzSig.clear();
@@ -884,6 +895,8 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		nNeutralPFCand = 0;
 		
 		for(unsigned ipf=0; ipf<pfcandidates.size(); ipf++){
+			
+			if(delta2R(leptons[ilep].eta,leptons[ilep].phi,pfcandidates[ipf].eta,pfcandidates[ipf].phi)>dRmin) {
 			
 		//	if(abs(pfcandidates[ipf].charge)>0){
 				
@@ -952,8 +965,86 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 			}
 			*/ 
   
+			} // DR condition
+  
 		}//ipf
 		
+		
+		PFCandplusLep_pt_rel.clear();
+		PFCandplusLep_pt_rel_log.clear();
+		PFCandplusLep_pt_log.clear();
+		PFCandplusLep_eta_rel.clear();
+		PFCandplusLep_phiAtVtx_rel.clear();
+		PFCandplusLep_deltaR.clear();
+		PFCandplusLep_puppiWeight.clear();
+		PFCandplusLep_puppiWeightNoLep.clear();
+		PFCandplusLep_caloFraction.clear();
+		PFCandplusLep_hcalFraction.clear();
+		PFCandplusLep_hcalFractionCalib.clear();
+		PFCandplusLep_pdgId.clear();
+		PFCandplusLep_energy_log.clear();
+		PFCandplusLep_dz.clear();
+		PFCandplusLep_dzError.clear();
+		PFCandplusLep_dzSig.clear();
+		PFCandplusLep_dxy.clear();
+		PFCandplusLep_dxyError.clear();
+		PFCandplusLep_dxySig.clear();
+		PFCandplusLep_trkChi2.clear();
+		PFCandplusLep_vertexChi2.clear();
+		PFCandplusLep_charge.clear();
+		PFCandplusLep_pvAssocQuality.clear();
+		PFCandplusLep_nTrackerLayers.clear();
+		PFCandplusLep_pixelhits.clear();
+		PFCandplusLep_status.clear();
+		//PFCand_time.clear();
+		PFCandplusLep_trackHighPurity.clear();
+		PFCandplusLep_isElectron.clear();
+		PFCandplusLep_isMuon.clear();
+		PFCandplusLep_isChargedHadron.clear();
+		PFCandplusLep_fromPV.clear();
+		
+		for(unsigned ipf=0; ipf<pfcandidates.size(); ipf++){
+		
+			PFCandplusLep_pt_rel.push_back(pfcandidates[ipf].pt/lepton_pt);
+			PFCandplusLep_pt_rel_log.push_back(log(pfcandidates[ipf].pt/lepton_pt));
+			PFCandplusLep_pt_log.push_back(log(pfcandidates[ipf].pt));
+			PFCandplusLep_eta_rel.push_back(pfcandidates[ipf].eta - lepton_eta);
+			PFCandplusLep_phiAtVtx_rel.push_back(PhiInRange(pfcandidates[ipf].phiAtVtx - lepton_phi));
+			PFCandplusLep_deltaR.push_back(delta2R(pfcandidates[ipf].eta,pfcandidates[ipf].phi,lepton_eta,lepton_phi));
+			PFCandplusLep_puppiWeight.push_back(pfcandidates[ipf].puppiWeight);
+			PFCandplusLep_puppiWeightNoLep.push_back(pfcandidates[ipf].puppiWeightNoLep);
+			PFCandplusLep_caloFraction.push_back(pfcandidates[ipf].caloFraction);
+			PFCandplusLep_hcalFraction.push_back(pfcandidates[ipf].hcalFraction);
+			PFCandplusLep_hcalFractionCalib.push_back(pfcandidates[ipf].hcalFractionCalib);
+			PFCandplusLep_pdgId.push_back(float(pfcandidates[ipf].pdgId));
+			
+			TLorentzVector pfcand_p4;
+			pfcand_p4.SetPtEtaPhiM(pfcandidates[ipf].pt,pfcandidates[ipf].eta,pfcandidates[ipf].phi,pfcandidates[ipf].mass);
+			PFCandplusLep_energy_log.push_back(log(pfcand_p4.E()));
+  
+			PFCandplusLep_dz.push_back(pfcandidates[ipf].dz);
+			PFCandplusLep_dzError.push_back(pfcandidates[ipf].dzError);
+			PFCandplusLep_dzSig.push_back(pfcandidates[ipf].dzSig);
+			PFCandplusLep_dxy.push_back(pfcandidates[ipf].dxy);
+			PFCandplusLep_dxyError.push_back(pfcandidates[ipf].dxyError);
+			PFCandplusLep_dxySig.push_back(pfcandidates[ipf].dxySig);
+		
+			PFCandplusLep_trkChi2.push_back(pfcandidates[ipf].trkChi2);
+			PFCandplusLep_vertexChi2.push_back(pfcandidates[ipf].vertexChi2);
+			PFCandplusLep_charge.push_back(float(pfcandidates[ipf].charge));
+			PFCandplusLep_lostInnerHits.push_back(float(pfcandidates[ipf].lostInnerHits));
+			PFCandplusLep_pvAssocQuality.push_back(float(pfcandidates[ipf].pvAssocQuality));
+			PFCandplusLep_nTrackerLayers.push_back(float(pfcandidates[ipf].nTrackerLayers));
+			PFCandplusLep_pixelhits.push_back(float(pfcandidates[ipf].pixelhits));
+			PFCandplusLep_status.push_back(float(pfcandidates[ipf].status));
+			//PFCand_time.push_back(pfcandidates[ipf].time);
+			PFCandplusLep_trackHighPurity.push_back(float(pfcandidates[ipf].trackHighPurity));
+			PFCandplusLep_isElectron.push_back(float(pfcandidates[ipf].isElectron));
+			PFCandplusLep_isMuon.push_back(float(pfcandidates[ipf].isMuon));
+			PFCandplusLep_isChargedHadron.push_back(float(pfcandidates[ipf].isChargedHadron));
+			PFCandplusLep_fromPV.push_back(float(pfcandidates[ipf].fromPV));
+			
+		} //ipf
 		
 		// secondary vertices within dR=0.5 //
 		
@@ -1011,38 +1102,165 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		
 		// nearest jet //
 		
-		float dR_lj_min = DR_AK4Jet_Maximum;
 		int i_nearjet = -1;
+		float dR_lj_min = DR_AK4Jet_Maximum;
 		
 		for(int ijet=0; ijet<nPFJetAK4; ijet++){
-			if(delta2R(lepton_eta,lepton_phi,PFJetAK4_eta[ijet],PFJetAK4_phi[ijet])<dR_lj_min){
-				dR_lj_min = delta2R(lepton_eta,lepton_phi,PFJetAK4_eta[ijet],PFJetAK4_phi[ijet]);
-				i_nearjet = ijet;
+			if(matchbydR){
+				if(delta2R(lepton_eta,lepton_phi,PFJetAK4_eta[ijet],PFJetAK4_phi[ijet])<dR_lj_min){
+					dR_lj_min = delta2R(lepton_eta,lepton_phi,PFJetAK4_eta[ijet],PFJetAK4_phi[ijet]);
+					i_nearjet = ijet;
+				}
+			}
+			else{
+				const auto &ak4jet = (*pfjetAK4s)[PFJetAK4_index[ijet]];
+				bool match_found = (abs(lepton_pdgId)==11)?JetMatchByCommonSourceCandidatePtr(leptons[ilep].ElectronPtr,ak4jet):JetMatchByCommonSourceCandidatePtr(leptons[ilep].MuonPtr,ak4jet);
+				if(match_found) { i_nearjet = ijet; break; }
 			}
 		}
-		
+				
 		if(i_nearjet>=0){
 		
+			const auto &ak4jet = (*pfjetAK4s)[PFJetAK4_index[i_nearjet]];
 			TLorentzVector jet_p4;
 			jet_p4.SetPtEtaPhiM(PFJetAK4_pt[i_nearjet],PFJetAK4_eta[i_nearjet],PFJetAK4_phi[i_nearjet],PFJetAK4_mass[i_nearjet]);
+			
 			TLorentzVector lep_p4;
 			lep_p4.SetPtEtaPhiM(lepton_pt,lepton_eta,lepton_phi,lepton_mass);
 			jet_p4 -= lep_p4;
+						
+			// Deriving JEC after lepton subtraction & applying it //			
+			double tmprecpt = jet_p4.Pt();
+			double total_cor =1;
+			Read_JEC(total_cor,tmprecpt,jet_p4.Eta(),Rho,isData,ak4jet,jecL1FastAK4,jecL2RelativeAK4,jecL3AbsoluteAK4,jecL2L3ResidualAK4);  
+			jet_p4.SetPtEtaPhiM(total_cor*jet_p4.Pt(),jet_p4.Eta(),jet_p4.Phi(),total_cor*jet_p4.M());
+			// end of JEC application //
 			
+			lepton_jetPtRelv2_abs =  (lep_p4.Vect().Perp(jet_p4.Vect()));
 			lepton_jetPtRelv2 = (lep_p4.Vect().Perp(jet_p4.Vect()))*1./lepton_pt;
 			lepton_jetPtRelv2_log = log(lepton_jetPtRelv2);
-			lepton_jetRelIso = PFJetAK4_pt[i_nearjet]*1./lepton_pt;
+			lepton_jetRelIso = jet_p4.Pt()*1./lepton_pt;
+			lepton_jetPtRatio = lepton_pt*1./(jet_p4+lep_p4).Pt();
 			lepton_jetbtag = PFJetAK4_btag_DeepFlav[i_nearjet];
+			lepton_jetbtag_DeepCSV = PFJetAK4_btag_DeepCSV[i_nearjet];
+			
+			// some other info as well //
+			
+			lepton_jethadronflavor = ak4jet.hadronFlavour();
+			lepton_jetpartonflavor = ak4jet.partonFlavour();
+			lepton_jetnConstituents = (ak4jet.chargedMultiplicity()+ak4jet.neutralMultiplicity());
+			
+			// counting track multiplicity within jet //
+    
+			int selectedTrackMult = 0;
+			
+			for( const auto daughterPtr : ak4jet.daughterPtrVector() ){
+		
+				const pat::PackedCandidate& daughter = *( (const pat::PackedCandidate*) daughterPtr.get() );
+            
+				if( daughter.charge() == 0 ) continue;
+				if( daughter.fromPV() < 2 ) continue;
+				if( delta2R(daughter.eta(), daughter.phi(), lepton_eta, lepton_phi) > 0.4 ) continue;
+				if( !daughter.hasTrackDetails() ) continue;
+
+				auto daughterTrack = daughter.pseudoTrack();
+			
+				if (daughterTrack.pt() > 1 && daughterTrack.hitPattern().numberOfValidHits() >= 8 && daughterTrack.hitPattern().numberOfValidPixelHits() >= 2 
+				&& daughterTrack.normalizedChi2() < 5 && fabs(daughterTrack.dxy(PV_vertex.position())) < 0.2 && fabs(daughterTrack.dz(PV_vertex.position())) < 17)
+				{
+					++selectedTrackMult;
+				}
+
+			} 
+     
+			lepton_jetNDauCharged = selectedTrackMult;
 			
 		}
 		else{
 			
-			lepton_jetPtRelv2 = -100;
-			lepton_jetRelIso = -100;
-			lepton_jetbtag = -100;
+			lepton_jetPtRelv2_abs = 0;
+			lepton_jetPtRelv2 = 0;
+			lepton_jetPtRelv2_log = -100;
 			
-			}
-  	
+			if(abs(lepton_pdgId)==11){  lepton_jetRelIso = lepton_pfRelIso04_eacor; }
+			else if (abs(lepton_pdgId)==13){ lepton_jetRelIso = lepton_pfRelIso04_drcor; }
+			else{ lepton_jetRelIso = -100; }
+			
+			lepton_jetPtRatio = 1./(1.+lepton_jetRelIso);
+			lepton_jetbtag = 0;
+			lepton_jetbtag_DeepCSV = 0;
+			
+			lepton_jetNDauCharged = 0;
+			
+		}
+		
+		DMatrixHandle dtest, dtestv2;
+		int nfeat = 13;				
+		
+		if(abs(lepton_pdgId)==11){
+			
+			boosterVars[1][0][0] = lepton_pt;
+			boosterVars[1][0][1] = lepton_eta;
+			boosterVars[1][0][2] = 1.*lepton_jetNDauCharged;
+			boosterVars[1][0][3] = lepton_minchiso;
+			boosterVars[1][0][4] = (lepton_minisoall-lepton_minchiso);
+			boosterVars[1][0][5] = lepton_jetPtRelv2_abs;
+			boosterVars[1][0][6] = lepton_jetPtRatio;
+			boosterVars[1][0][7] = lepton_pfRelIso03_drcor;
+			boosterVars[1][0][8] = lepton_jetbtag;
+			boosterVars[1][0][9] = lepton_sip3d;
+			boosterVars[1][0][10] = log(abs(lepton_dxy));
+			boosterVars[1][0][11] = log(abs(lepton_dz));
+			boosterVars[1][0][12] = lepton_mvaFall17V2noIso;
+			boosterVars[1][0][13] = 1.*lepton_lostHits;
+		
+			XGDMatrixCreateFromMat(reinterpret_cast<float*>(boosterVars[1]), 1, nfeat, NAN, &dtest);
+			bst_ulong out_len;
+			const float *out_result;
+			XGBoosterPredict(booster[1], dtest, 0, 0, &out_len, &out_result); 
+			XGDMatrixFree(dtest);
+			lepton_TopMVAScore = out_result[0];
+			
+			XGDMatrixCreateFromMat(reinterpret_cast<float*>(boosterVars[1]), 1, nfeat+1, NAN, &dtestv2);
+			bst_ulong out_lenv2;
+			const float *out_resultv2;
+			XGBoosterPredict(boosterv2[1], dtestv2, 0, 0, &out_lenv2, &out_resultv2); 
+			XGDMatrixFree(dtestv2);
+			lepton_Topv2MVAScore = out_resultv2[0];
+			
+		}
+		else if (abs(lepton_pdgId)==13){
+
+			boosterVars[0][0][0] = lepton_pt;
+			boosterVars[0][0][1] = lepton_eta;
+			boosterVars[0][0][2] = 1.*lepton_jetNDauCharged;
+			boosterVars[0][0][3] = lepton_minchiso;
+			boosterVars[0][0][4] = (lepton_minisoall-lepton_minchiso);
+			boosterVars[0][0][5] = lepton_jetPtRelv2_abs;
+			boosterVars[0][0][6] = lepton_jetPtRatio;
+			boosterVars[0][0][7] = lepton_pfRelIso03_drcor;
+			boosterVars[0][0][8] = lepton_jetbtag;
+			boosterVars[0][0][9] = lepton_sip3d;
+			boosterVars[0][0][10] = log(abs(lepton_dxy));
+			boosterVars[0][0][11] = log(abs(lepton_dz));
+			boosterVars[0][0][12] = lepton_segmentComp;
+			
+			XGDMatrixCreateFromMat(reinterpret_cast<float*>(boosterVars[0]), 1, nfeat, NAN, &dtest);
+			bst_ulong out_len;
+			const float *out_result;
+			XGBoosterPredict(booster[0], dtest, 0, 0, &out_len, &out_result); 
+			XGDMatrixFree(dtest);
+			lepton_TopMVAScore = out_result[0];
+			
+			XGDMatrixCreateFromMat(reinterpret_cast<float*>(boosterVars[0]), 1, nfeat, NAN, &dtestv2);
+			bst_ulong out_lenv2;
+			const float *out_resultv2;
+			XGBoosterPredict(boosterv2[0], dtestv2, 0, 0, &out_lenv2, &out_resultv2); 
+			XGDMatrixFree(dtestv2);
+			lepton_Topv2MVAScore = out_resultv2[0];
+			
+		}
+				
 		T1->Fill();
 		
 	} // ilep

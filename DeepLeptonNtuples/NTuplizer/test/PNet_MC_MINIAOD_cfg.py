@@ -193,8 +193,9 @@ process.deepntuplizer =  cms.EDAnalyzer('PNLepton',
 	 Read_btagging_SF = cms.untracked.bool(False),
 	 Subtract_Lepton_fromAK8 = cms.untracked.bool(True),
 	 Subtract_Lepton_fromAK4 = cms.untracked.bool(True),
-	 Save_only_Muons  = cms.untracked.bool(True),
-	 Save_only_Electrons  = cms.untracked.bool(False),
+	 Save_only_Muons  = cms.untracked.bool(False),
+	 Save_only_Electrons  = cms.untracked.bool(True),
+ 	 MacthwithDR  = cms.untracked.bool(False),
 
 #	 PFJetsAK8 = cms.InputTag("slimmedJetsAK8"),
 #        PFJetsAK8 = cms.InputTag("selectedPatJetsAK8PFPuppiSoftDropPacked","SubJets","Combined"),
@@ -301,6 +302,11 @@ process.deepntuplizer =  cms.EDAnalyzer('PNLepton',
 
 	 BtagSFFile_DeepCSV = cms.string("BtagRecommendation106XUL18/DeepCSV_106XUL18SF_V1p1.csv"),
 	 BtagSFFile_DeepFlav = cms.string("BtagRecommendation106XUL18/DeepJet_106XUL18SF_V1p1.csv"),
+
+	 mu_TopUL18_XGB_weights = cms.string("TopLeptonMVA_Weights/mu_TOPUL18_XGB.weights.bin"),
+         el_TopUL18_XGB_weights = cms.string("TopLeptonMVA_Weights/el_TOPUL18_XGB.weights.bin"),
+	 mu_Topv2UL18_XGB_weights = cms.string("TopLeptonMVA_Weights/mu_TOPv2UL18_XGB.weights.bin"),
+	 el_Topv2UL18_XGB_weights = cms.string("TopLeptonMVA_Weights/el_TOPv2UL18_XGB.weights.bin"),
 
 	 RochcorFolder = cms.string("roccor.Run2.v5/"),
 

@@ -97,6 +97,11 @@ class Lepton{
 		bool mvaid_Fallv2WP90;
 		bool mvaid_Fallv2WP80_noIso;
 		bool mvaid_Fallv2WP80;
+		// ID floats //
+		float mvaFall17V1Iso;
+		float mvaFall17V1noIso;
+		float mvaFall17V2Iso;
+		float mvaFall17V2noIso;
 		// isolation //
 		float pfRelIso03_eacor;
 		float pfRelIso04_eacor;
@@ -150,6 +155,8 @@ class Lepton{
 		float segmentComp;
 		int nStations;
   
+		pat::Muon MuonPtr;
+		pat::Electron ElectronPtr;
 };
 
 void Initialize(Lepton &lepton){
@@ -205,6 +212,11 @@ void Initialize(Lepton &lepton){
 	lepton.mvaid_Fallv2WP90_noIso = false;
 	lepton.mvaid_Fallv2WP80 = false;
 	lepton.mvaid_Fallv2WP80_noIso = false;
+	
+	lepton.mvaFall17V1Iso = -1;
+	lepton.mvaFall17V1noIso = -1;
+	lepton.mvaFall17V2Iso = -1;
+	lepton.mvaFall17V2noIso = -1;
    
 	lepton.eoverp = 0;
  
