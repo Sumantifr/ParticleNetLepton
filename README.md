@@ -5,7 +5,7 @@ Lepton identification using ParticleNet.
 
 - cmsrel CMSSW_10_6_29
 
-- cd CMSSW_10_6_29/src
+- cd $CMSSW_BASE/src
 
 - git clone git@github.com:Sumantifr/ParticleNetLepton.git . <br/> 
   OR <br/>
@@ -21,6 +21,25 @@ Lepton identification using ParticleNet.
 - voms-proxy-init -rfc -voms cms -valid 96:00
 
 - cmsRun PNet_MC_MINIAOD_cfg.py 
+
+
+## For using XGBoost in CMSSW ##
+
+ Taken from git clone https://github.com/simonepigazzini/XGBoostCMSSW.git
+
+- cd $CMSSW_BASE/src
+
+- cmsenv
+
+- git clone https://github.com/simonepigazzini/XGBoostCMSSW.git
+
+- cp XGBoostCMSSW/XGBoostInterface/toolbox/\*xml $CMSSW_BASE/config/toolbox/$SCRAM_ARCH/tools/selected/
+
+- scram setup rabit
+
+- scram setup xgboost
+
+- scram b -j10
 
 ### Running crab jobs on MC samples 
 
