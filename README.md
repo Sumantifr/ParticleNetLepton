@@ -23,7 +23,7 @@ Lepton identification using ParticleNet.
 - cmsRun PNet_MC_MINIAOD_cfg.py 
 
 
-## For using XGBoost in CMSSW (needed here to evaluate TopLeptonMVA (developed by Univ of Ghent) ##
+## For using XGBoost in CMSSW (needed to evaluate TopLeptonMVA) ##
 
  Taken from git clone https://github.com/simonepigazzini/XGBoostCMSSW.git
 
