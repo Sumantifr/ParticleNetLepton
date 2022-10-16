@@ -187,7 +187,22 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
   edm::Handle<double> Rho_PF;
   iEvent.getByToken(tok_Rho_,Rho_PF);
   Rho = *Rho_PF;
-
+  
+  edm::Handle<double> Rho_PF_Central;
+  iEvent.getByToken(tok_Rho_Central_,Rho_PF_Central);
+  Rho_Central = *Rho_PF_Central;
+  
+  edm::Handle<double> Rho_PF_CentralCalo;
+  iEvent.getByToken(tok_Rho_CentralCalo_,Rho_PF_CentralCalo);
+  Rho_CentralCalo = *Rho_PF_CentralCalo;
+  
+  edm::Handle<double> Rho_PF_CentralChargedPileUp;
+  iEvent.getByToken(tok_Rho_CentralChargedPileUp_,Rho_PF_CentralChargedPileUp);
+  Rho_CentralChargedPileUp = *Rho_PF_CentralChargedPileUp;
+  
+  edm::Handle<double> Rho_PF_CentralNeutral;
+  iEvent.getByToken(tok_Rho_CentralNeutral_,Rho_PF_CentralNeutral);
+  Rho_CentralNeutral = *Rho_PF_CentralNeutral;  
   
   // ====== RECO-objects now  ==========//
   
@@ -582,9 +597,10 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		
 		// create generator labels //
 		
-		label_Muon_Prompt = label_Muon_fromTau = label_Muon_fromHFHadron = label_Muon_fromLFHadron = label_Muon_fromPhoton = label_Muon_unknown = label_Muon_fromPhotonORunknown = 0;
-		label_Electron_Prompt = label_Electron_fromTau = label_Electron_fromHFHadron = label_Electron_fromLFHadron = label_Electron_fromPhoton = label_Electron_unknown = label_Electron_fromPhotonORunknown = 0;
+		label_Muon_Prompt = label_Muon_fromTau = label_Muon_fromHFHadron = label_Muon_fromLFHadron = label_Muon_fromPhoton = label_Muon_unknown = label_Muon_fromPhotonORunknown = label_Muon_PromptORTau = 0;
+		label_Electron_Prompt = label_Electron_fromTau = label_Electron_fromHFHadron = label_Electron_fromLFHadron = label_Electron_fromPhoton = label_Electron_unknown = label_Electron_fromPhotonORunknown = label_Electron_PromptORTau = 0;
 		label_unknown = 0;
+		label_Muon = label_Electron = false;
 		
 		if(abs(leptons[ilep].pdgId)==13){
 			label_Muon = true;
@@ -843,8 +859,8 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 	
 		}
 		
-		PFCand_pt_rel.clear();
 		PFCand_pt_rel_log.clear();
+		PFCand_pt_log.clear();
 		PFCand_eta_rel.clear();
 		PFCand_phi_rel.clear();
 		PFCand_phiAtVtx_rel.clear();
@@ -902,7 +918,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 				
 		//		if(pfcandidates[ipf].hasTrackDetails){
 			
-			PFCand_pt_rel.push_back(pfcandidates[ipf].pt/lepton_pt);
+			PFCand_pt_log.push_back(log(pfcandidates[ipf].pt));
 			PFCand_pt_rel_log.push_back(log(pfcandidates[ipf].pt/lepton_pt));
 			PFCand_eta_rel.push_back(pfcandidates[ipf].eta - lepton_eta);
 			PFCand_phi_rel.push_back(PhiInRange(pfcandidates[ipf].phi - lepton_phi));
@@ -970,9 +986,8 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		}//ipf
 		
 		
-		PFCandplusLep_pt_rel.clear();
-		PFCandplusLep_pt_rel_log.clear();
 		PFCandplusLep_pt_log.clear();
+		PFCandplusLep_pt_rel_log.clear();
 		PFCandplusLep_eta_rel.clear();
 		PFCandplusLep_phiAtVtx_rel.clear();
 		PFCandplusLep_deltaR.clear();
@@ -1005,9 +1020,8 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		
 		for(unsigned ipf=0; ipf<pfcandidates.size(); ipf++){
 		
-			PFCandplusLep_pt_rel.push_back(pfcandidates[ipf].pt/lepton_pt);
-			PFCandplusLep_pt_rel_log.push_back(log(pfcandidates[ipf].pt/lepton_pt));
 			PFCandplusLep_pt_log.push_back(log(pfcandidates[ipf].pt));
+			PFCandplusLep_pt_rel_log.push_back(log(pfcandidates[ipf].pt/lepton_pt));
 			PFCandplusLep_eta_rel.push_back(pfcandidates[ipf].eta - lepton_eta);
 			PFCandplusLep_phiAtVtx_rel.push_back(PhiInRange(pfcandidates[ipf].phiAtVtx - lepton_phi));
 			PFCandplusLep_deltaR.push_back(delta2R(pfcandidates[ipf].eta,pfcandidates[ipf].phi,lepton_eta,lepton_phi));
@@ -1149,6 +1163,7 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 			lepton_jethadronflavor = ak4jet.hadronFlavour();
 			lepton_jetpartonflavor = ak4jet.partonFlavour();
 			lepton_jetnConstituents = (ak4jet.chargedMultiplicity()+ak4jet.neutralMultiplicity());
+			lepton_jetnChargedConstituents = ak4jet.chargedMultiplicity();
 			
 			// counting track multiplicity within jet //
     

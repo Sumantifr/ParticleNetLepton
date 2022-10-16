@@ -672,7 +672,7 @@ private:
   edm::EDGetTokenT<GenEventInfoProduct> tok_wt_;
   
   edm::EDGetTokenT<std::vector<PileupSummaryInfo> > pileup_;
-  edm::EDGetTokenT<double> tok_Rho_;
+  edm::EDGetTokenT<double> tok_Rho_, tok_Rho_Central_, tok_Rho_CentralCalo_, tok_Rho_CentralChargedPileUp_, tok_Rho_CentralNeutral_;
   
   //edm::EDGetTokenT <edm::ValueMap <bool> > tok_mvaPhoID_FallV2_WP90;
   //edm::EDGetTokenT <edm::ValueMap <bool> > tok_mvaPhoID_FallV2_WP80;
@@ -713,7 +713,7 @@ private:
   double Generator_weight;
   double weights[njetmx];
   
-  double Rho ;
+  double Rho, Rho_Central, Rho_CentralCalo, Rho_CentralChargedPileUp, Rho_CentralNeutral ;
   
  /* 
   int PFJetAK8_ncons[njetmxAK8];
@@ -794,7 +794,7 @@ private:
   
   float lepton_jetPtRelv2_abs, lepton_jetPtRelv2, lepton_jetPtRelv2_log, lepton_jetRelIso, lepton_jetPtRatio, lepton_jetbtag, lepton_jetbtag_DeepCSV;
   int lepton_jetNDauCharged;
-  int lepton_jethadronflavor, lepton_jetpartonflavor, lepton_jetnConstituents;
+  int lepton_jethadronflavor, lepton_jetpartonflavor, lepton_jetnConstituents, lepton_jetnChargedConstituents;
   
   float lepton_TopMVAScore, lepton_Topv2MVAScore;
   
@@ -823,7 +823,7 @@ private:
   
   int nChargePFCand;
   
-  vector<float> PFCand_pt_rel;
+  vector<float> PFCand_pt_log;
   vector<float> PFCand_pt_rel_log;
   vector<float> PFCand_eta_rel;
   vector<float> PFCand_phi_rel;
@@ -876,9 +876,8 @@ private:
   
   // PF candidates including lepton //
   
-  vector<float> PFCandplusLep_pt_rel;
-  vector<float> PFCandplusLep_pt_rel_log;
   vector<float> PFCandplusLep_pt_log;
+  vector<float> PFCandplusLep_pt_rel_log;
   vector<float> PFCandplusLep_eta_rel;
   vector<float> PFCandplusLep_phiAtVtx_rel;
   vector<float> PFCandplusLep_deltaR;
@@ -1050,6 +1049,10 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   tok_sv =consumes<reco::VertexCompositePtrCandidateCollection>( pset.getParameter<edm::InputTag>("SecondaryVertices"));
   
   tok_Rho_ = consumes<double>(pset.getParameter<edm::InputTag>("PFRho"));
+  tok_Rho_Central_ = consumes<double>(pset.getParameter<edm::InputTag>("PFRhoCentral"));
+  tok_Rho_CentralCalo_= consumes<double>(pset.getParameter<edm::InputTag>("PFRhoCentralCalo"));
+  tok_Rho_CentralChargedPileUp_= consumes<double>(pset.getParameter<edm::InputTag>("PFRhoCentralChargedPileUp"));
+  tok_Rho_CentralNeutral_= consumes<double>(pset.getParameter<edm::InputTag>("PFRhoCentralNeutral"));
     
   tok_muons_ = consumes<edm::View<pat::Muon>> ( pset.getParameter<edm::InputTag>("Muons"));
   tok_electrons_ = consumes<edm::View<pat::Electron>> ( pset.getParameter<edm::InputTag>("Electrons"));
@@ -1100,7 +1103,15 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   // primary vertices //
   
   T1->Branch("PV_npvsGood", &PV_npvsGood, "PV_npvsGood/I");
- 
+  
+  // Energy density (measure of pileup) //
+  
+  T1->Branch("fixedGridRhoFastjetAll", &Rho, "Rho/D");
+  T1->Branch("fixedGridRhoFastjetCentral", &Rho_Central, "Rho_Central/D");
+  T1->Branch("fixedGridRhoFastjetCentralCalo", &Rho_CentralCalo, "Rho_CentralCalo/D");
+  T1->Branch("fixedGridRhoFastjetCentralChargedPileUp", &Rho_CentralChargedPileUp, "Rho_CentralChargedPileUp/D");
+  T1->Branch("fixedGridRhoFastjetCentralNeutral", &Rho_CentralNeutral, "Rho_CentralNeutral/D");
+  
   // Lepton info //
   
   //T1->Branch("nLepton",&nLepton,"nLepton/I");
@@ -1294,6 +1305,7 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   T1->Branch("lepton_jethadronflavor", &lepton_jethadronflavor, "lepton_jethadronflavor/I");
   T1->Branch("lepton_jetpartonflavor", &lepton_jetpartonflavor, "lepton_jetpartonflavor/I");
   T1->Branch("lepton_jetnConstituents", &lepton_jetnConstituents, "lepton_jetnConstituents/I");
+  T1->Branch("lepton_jetnChargedConstituents", &lepton_jetnChargedConstituents, "lepton_jetnChargedConstituents/I");
  
   // TopMVA (from Ghent) //
   
@@ -1304,10 +1316,11 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   
   T1->Branch("nPFCand",&nPFCand,"nPFCand/I");
   
-  //T1->Branch("PFCand_pt_rel",&PFCand_pt_rel);
+  T1->Branch("PFCand_pt_log",&PFCand_pt_log);
+  T1->Branch("PFCand_energy_log",&PFCand_energy_log);
   T1->Branch("PFCand_pt_rel_log",&PFCand_pt_rel_log);
   T1->Branch("PFCand_eta_rel",&PFCand_eta_rel);
-  T1->Branch("PFCand_phi_rel",&PFCand_phi_rel);
+  //T1->Branch("PFCand_phi_rel",&PFCand_phi_rel);
   T1->Branch("PFCand_phiAtVtx_rel",&PFCand_phiAtVtx_rel);
   T1->Branch("PFCand_deltaR",&PFCand_deltaR);
   //T1->Branch("PFCand_mass",&PFCand_mass);
@@ -1317,7 +1330,6 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   T1->Branch("PFCand_hcalFractionCalib",&PFCand_hcalFractionCalib);
   //T1->Branch("PFCand_puppiWeight",&PFCand_puppiWeight);
   T1->Branch("PFCand_puppiWeightNoLep",&PFCand_puppiWeightNoLep);
-  T1->Branch("PFCand_energy_log",&PFCand_energy_log);
   T1->Branch("PFCand_dz",&PFCand_dz);
   //T1->Branch("PFCand_dzError",&PFCand_dzError);
   T1->Branch("PFCand_dzSig",&PFCand_dzSig);
@@ -1358,9 +1370,9 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   
   // PF candidates including lepton //
   
-  //T1->Branch("PFCandplusLep_pt_rel",&PFCandplusLep_pt_rel);
-  T1->Branch("PFCandplusLep_pt_rel_log",&PFCandplusLep_pt_rel_log);
   T1->Branch("PFCandplusLep_pt_log",&PFCandplusLep_pt_log);
+  T1->Branch("PFCandplusLep_energy_log",&PFCandplusLep_energy_log);  
+  T1->Branch("PFCandplusLep_pt_rel_log",&PFCandplusLep_pt_rel_log);
   T1->Branch("PFCandplusLep_eta_rel",&PFCandplusLep_eta_rel);
   T1->Branch("PFCandplusLep_phiAtVtx_rel",&PFCandplusLep_phiAtVtx_rel);
   T1->Branch("PFCandplusLep_deltaR",&PFCandplusLep_deltaR);
@@ -1370,7 +1382,6 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   T1->Branch("PFCandplusLep_hcalFractionCalib",&PFCandplusLep_hcalFractionCalib);
   T1->Branch("PFCandplusLep_puppiWeight",&PFCandplusLep_puppiWeight);
   T1->Branch("PFCandplusLep_puppiWeightNoLep",&PFCandplusLep_puppiWeightNoLep);
-  T1->Branch("PFCandplusLep_energy_log",&PFCandplusLep_energy_log);  
   T1->Branch("PFCandplusLep_dz",&PFCandplusLep_dz);
   //T1->Branch("PFCandplusLep_dzError",&PFCandplusLep_dzError);
   T1->Branch("PFCandplusLep_dzSig",&PFCandplusLep_dzSig);
