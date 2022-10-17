@@ -56,8 +56,14 @@ Lepton identification using ParticleNet.
 
 - *Don't forget to remove crab_submit.sh and crab_monitor.sh before submitting new jobs*
 
-- *Important* Running crab jobs with XGBoost will give problem due to shared libraries. A quick fix is the following:
-  -- check the original libxgboost.so: 
-  -- ls -ltr $CMSSW_BASE/external/$SCRAM_ARCH/lib/libxgboost.so
-  -- it will show you a libxgboost.so file in /cvmfs/cms.cern.... path
-  -- copy the original libxgboost.so to $CMSSW_BASE/lib/$SCRAM_ARCH
+- #Important# 
+
+  Running crab jobs with XGBoost will give problem due to shared libraries. A quick fix is the following:
+
+  check the original libxgboost.so: 
+
+  ls -ltr $CMSSW_BASE/external/$SCRAM_ARCH/lib/libxgboost.so
+
+  it will show you a libxgboost.so file in /cvmfs/cms.cern.... path
+
+  copy the original libxgboost.so to $CMSSW_BASE/lib/$SCRAM_ARCH
