@@ -56,7 +56,7 @@ Lepton identification using ParticleNet.
 
 - *Don't forget to remove crab_submit.sh and crab_monitor.sh before submitting new jobs*
 
-- #Important# 
+- ** Important **
 
   Running crab jobs with XGBoost will give problem due to shared libraries. A quick fix is the following:
 
