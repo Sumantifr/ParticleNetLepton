@@ -32,6 +32,7 @@
 <use name="RecoVertex/VertexTools"/>
 <use name="fastjet"/>
 <use name="fastjet-contrib"/>
+<use name="xgboost"/>
 <flags EDM_PLUGIN="1"/>
 <export>
    <lib name="1"/>
