@@ -653,6 +653,7 @@ private:
   bool read_btagSF;
   bool subtractLepton_fromAK4, subtractLepton_fromAK8;
   bool save_only_muons, save_only_electrons;
+  bool store_lepton_plus_PFcand;
   bool matchbydR;
   
   uint nPDFsets;
@@ -1028,6 +1029,7 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   read_btagSF = pset.getUntrackedParameter<bool>("Read_btagging_SF", false);
   save_only_muons = pset.getUntrackedParameter<bool>("Save_only_Muons", false);
   save_only_electrons = pset.getUntrackedParameter<bool>("Save_only_Electrons", false);
+  store_lepton_plus_PFcand = pset.getUntrackedParameter<bool>("Store_Lepton_plus_PFcand", false);
   matchbydR = pset.getUntrackedParameter<bool>("MacthwithDR", false);
 
   minjPt = pset.getUntrackedParameter<double>("minjPt",25.);
@@ -1370,6 +1372,8 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   
   // PF candidates including lepton //
   
+  if(store_lepton_plus_PFcand){
+  
   T1->Branch("PFCandplusLep_pt_log",&PFCandplusLep_pt_log);
   T1->Branch("PFCandplusLep_energy_log",&PFCandplusLep_energy_log);  
   T1->Branch("PFCandplusLep_pt_rel_log",&PFCandplusLep_pt_rel_log);
@@ -1400,6 +1404,8 @@ PNLepton::PNLepton(const edm::ParameterSet& pset):
   T1->Branch("PFCandplusLep_isMuon",&PFCandplusLep_isMuon);
   T1->Branch("PFCandplusLep_isChargedHadron",&PFCandplusLep_isChargedHadron);
   T1->Branch("PFCandplusLep_fromPV",&PFCandplusLep_fromPV);
+  
+  }
   
   // Secondary vertices //
   

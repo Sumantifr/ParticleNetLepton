@@ -986,79 +986,83 @@ PNLepton::analyze(const edm::Event& iEvent, const edm::EventSetup& pset) {
 		}//ipf
 		
 		
-		PFCandplusLep_pt_log.clear();
-		PFCandplusLep_pt_rel_log.clear();
-		PFCandplusLep_eta_rel.clear();
-		PFCandplusLep_phiAtVtx_rel.clear();
-		PFCandplusLep_deltaR.clear();
-		PFCandplusLep_puppiWeight.clear();
-		PFCandplusLep_puppiWeightNoLep.clear();
-		PFCandplusLep_caloFraction.clear();
-		PFCandplusLep_hcalFraction.clear();
-		PFCandplusLep_hcalFractionCalib.clear();
-		PFCandplusLep_pdgId.clear();
-		PFCandplusLep_energy_log.clear();
-		PFCandplusLep_dz.clear();
-		PFCandplusLep_dzError.clear();
-		PFCandplusLep_dzSig.clear();
-		PFCandplusLep_dxy.clear();
-		PFCandplusLep_dxyError.clear();
-		PFCandplusLep_dxySig.clear();
-		PFCandplusLep_trkChi2.clear();
-		PFCandplusLep_vertexChi2.clear();
-		PFCandplusLep_charge.clear();
-		PFCandplusLep_pvAssocQuality.clear();
-		PFCandplusLep_nTrackerLayers.clear();
-		PFCandplusLep_pixelhits.clear();
-		PFCandplusLep_status.clear();
-		//PFCand_time.clear();
-		PFCandplusLep_trackHighPurity.clear();
-		PFCandplusLep_isElectron.clear();
-		PFCandplusLep_isMuon.clear();
-		PFCandplusLep_isChargedHadron.clear();
-		PFCandplusLep_fromPV.clear();
+		if(store_lepton_plus_PFcand){
 		
-		for(unsigned ipf=0; ipf<pfcandidates.size(); ipf++){
-		
-			PFCandplusLep_pt_log.push_back(log(pfcandidates[ipf].pt));
-			PFCandplusLep_pt_rel_log.push_back(log(pfcandidates[ipf].pt/lepton_pt));
-			PFCandplusLep_eta_rel.push_back(pfcandidates[ipf].eta - lepton_eta);
-			PFCandplusLep_phiAtVtx_rel.push_back(PhiInRange(pfcandidates[ipf].phiAtVtx - lepton_phi));
-			PFCandplusLep_deltaR.push_back(delta2R(pfcandidates[ipf].eta,pfcandidates[ipf].phi,lepton_eta,lepton_phi));
-			PFCandplusLep_puppiWeight.push_back(pfcandidates[ipf].puppiWeight);
-			PFCandplusLep_puppiWeightNoLep.push_back(pfcandidates[ipf].puppiWeightNoLep);
-			PFCandplusLep_caloFraction.push_back(pfcandidates[ipf].caloFraction);
-			PFCandplusLep_hcalFraction.push_back(pfcandidates[ipf].hcalFraction);
-			PFCandplusLep_hcalFractionCalib.push_back(pfcandidates[ipf].hcalFractionCalib);
-			PFCandplusLep_pdgId.push_back(float(pfcandidates[ipf].pdgId));
+			PFCandplusLep_pt_log.clear();
+			PFCandplusLep_pt_rel_log.clear();
+			PFCandplusLep_eta_rel.clear();
+			PFCandplusLep_phiAtVtx_rel.clear();
+			PFCandplusLep_deltaR.clear();
+			PFCandplusLep_puppiWeight.clear();
+			PFCandplusLep_puppiWeightNoLep.clear();
+			PFCandplusLep_caloFraction.clear();
+			PFCandplusLep_hcalFraction.clear();
+			PFCandplusLep_hcalFractionCalib.clear();
+			PFCandplusLep_pdgId.clear();
+			PFCandplusLep_energy_log.clear();
+			PFCandplusLep_dz.clear();
+			PFCandplusLep_dzError.clear();
+			PFCandplusLep_dzSig.clear();
+			PFCandplusLep_dxy.clear();
+			PFCandplusLep_dxyError.clear();
+			PFCandplusLep_dxySig.clear();
+			PFCandplusLep_trkChi2.clear();
+			PFCandplusLep_vertexChi2.clear();
+			PFCandplusLep_charge.clear();
+			PFCandplusLep_pvAssocQuality.clear();
+			PFCandplusLep_nTrackerLayers.clear();
+			PFCandplusLep_pixelhits.clear();
+			PFCandplusLep_status.clear();
+			//PFCand_time.clear();
+			PFCandplusLep_trackHighPurity.clear();
+			PFCandplusLep_isElectron.clear();
+			PFCandplusLep_isMuon.clear();
+			PFCandplusLep_isChargedHadron.clear();
+			PFCandplusLep_fromPV.clear();
+				
+			for(unsigned ipf=0; ipf<pfcandidates.size(); ipf++){
 			
-			TLorentzVector pfcand_p4;
-			pfcand_p4.SetPtEtaPhiM(pfcandidates[ipf].pt,pfcandidates[ipf].eta,pfcandidates[ipf].phi,pfcandidates[ipf].mass);
-			PFCandplusLep_energy_log.push_back(log(pfcand_p4.E()));
-  
-			PFCandplusLep_dz.push_back(pfcandidates[ipf].dz);
-			PFCandplusLep_dzError.push_back(pfcandidates[ipf].dzError);
-			PFCandplusLep_dzSig.push_back(pfcandidates[ipf].dzSig);
-			PFCandplusLep_dxy.push_back(pfcandidates[ipf].dxy);
-			PFCandplusLep_dxyError.push_back(pfcandidates[ipf].dxyError);
-			PFCandplusLep_dxySig.push_back(pfcandidates[ipf].dxySig);
-		
-			PFCandplusLep_trkChi2.push_back(pfcandidates[ipf].trkChi2);
-			PFCandplusLep_vertexChi2.push_back(pfcandidates[ipf].vertexChi2);
-			PFCandplusLep_charge.push_back(float(pfcandidates[ipf].charge));
-			PFCandplusLep_lostInnerHits.push_back(float(pfcandidates[ipf].lostInnerHits));
-			PFCandplusLep_pvAssocQuality.push_back(float(pfcandidates[ipf].pvAssocQuality));
-			PFCandplusLep_nTrackerLayers.push_back(float(pfcandidates[ipf].nTrackerLayers));
-			PFCandplusLep_pixelhits.push_back(float(pfcandidates[ipf].pixelhits));
-			PFCandplusLep_status.push_back(float(pfcandidates[ipf].status));
-			//PFCand_time.push_back(pfcandidates[ipf].time);
-			PFCandplusLep_trackHighPurity.push_back(float(pfcandidates[ipf].trackHighPurity));
-			PFCandplusLep_isElectron.push_back(float(pfcandidates[ipf].isElectron));
-			PFCandplusLep_isMuon.push_back(float(pfcandidates[ipf].isMuon));
-			PFCandplusLep_isChargedHadron.push_back(float(pfcandidates[ipf].isChargedHadron));
-			PFCandplusLep_fromPV.push_back(float(pfcandidates[ipf].fromPV));
+				PFCandplusLep_pt_log.push_back(log(pfcandidates[ipf].pt));
+				PFCandplusLep_pt_rel_log.push_back(log(pfcandidates[ipf].pt/lepton_pt));
+				PFCandplusLep_eta_rel.push_back(pfcandidates[ipf].eta - lepton_eta);
+				PFCandplusLep_phiAtVtx_rel.push_back(PhiInRange(pfcandidates[ipf].phiAtVtx - lepton_phi));
+				PFCandplusLep_deltaR.push_back(delta2R(pfcandidates[ipf].eta,pfcandidates[ipf].phi,lepton_eta,lepton_phi));
+				PFCandplusLep_puppiWeight.push_back(pfcandidates[ipf].puppiWeight);
+				PFCandplusLep_puppiWeightNoLep.push_back(pfcandidates[ipf].puppiWeightNoLep);
+				PFCandplusLep_caloFraction.push_back(pfcandidates[ipf].caloFraction);
+				PFCandplusLep_hcalFraction.push_back(pfcandidates[ipf].hcalFraction);
+				PFCandplusLep_hcalFractionCalib.push_back(pfcandidates[ipf].hcalFractionCalib);
+				PFCandplusLep_pdgId.push_back(float(pfcandidates[ipf].pdgId));
+				
+				TLorentzVector pfcand_p4;
+				pfcand_p4.SetPtEtaPhiM(pfcandidates[ipf].pt,pfcandidates[ipf].eta,pfcandidates[ipf].phi,pfcandidates[ipf].mass);
+				PFCandplusLep_energy_log.push_back(log(pfcand_p4.E()));
+	  
+				PFCandplusLep_dz.push_back(pfcandidates[ipf].dz);
+				PFCandplusLep_dzError.push_back(pfcandidates[ipf].dzError);
+				PFCandplusLep_dzSig.push_back(pfcandidates[ipf].dzSig);
+				PFCandplusLep_dxy.push_back(pfcandidates[ipf].dxy);
+				PFCandplusLep_dxyError.push_back(pfcandidates[ipf].dxyError);
+				PFCandplusLep_dxySig.push_back(pfcandidates[ipf].dxySig);
 			
-		} //ipf
+				PFCandplusLep_trkChi2.push_back(pfcandidates[ipf].trkChi2);
+				PFCandplusLep_vertexChi2.push_back(pfcandidates[ipf].vertexChi2);
+				PFCandplusLep_charge.push_back(float(pfcandidates[ipf].charge));
+				PFCandplusLep_lostInnerHits.push_back(float(pfcandidates[ipf].lostInnerHits));
+				PFCandplusLep_pvAssocQuality.push_back(float(pfcandidates[ipf].pvAssocQuality));
+				PFCandplusLep_nTrackerLayers.push_back(float(pfcandidates[ipf].nTrackerLayers));
+				PFCandplusLep_pixelhits.push_back(float(pfcandidates[ipf].pixelhits));
+				PFCandplusLep_status.push_back(float(pfcandidates[ipf].status));
+				//PFCand_time.push_back(pfcandidates[ipf].time);
+				PFCandplusLep_trackHighPurity.push_back(float(pfcandidates[ipf].trackHighPurity));
+				PFCandplusLep_isElectron.push_back(float(pfcandidates[ipf].isElectron));
+				PFCandplusLep_isMuon.push_back(float(pfcandidates[ipf].isMuon));
+				PFCandplusLep_isChargedHadron.push_back(float(pfcandidates[ipf].isChargedHadron));
+				PFCandplusLep_fromPV.push_back(float(pfcandidates[ipf].fromPV));
+				
+			} //ipf
+		
+		}// if store_lepton_plus_PFcand
 		
 		// secondary vertices within dR=0.5 //
 		
